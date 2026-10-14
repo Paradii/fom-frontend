@@ -1,0 +1,16 @@
+{
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.semi": true,
+  "prettier.singleQuote": false,
+  "prettier.printWidth": 80,
+  "files.exclude": {
+    "**/node_modules": true,
+    "dist": true
+  },
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact"
+  },
+  "prettier.trailingComma": "all"
+}

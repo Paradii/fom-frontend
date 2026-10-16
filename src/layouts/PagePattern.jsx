@@ -28,13 +28,15 @@ const PagePattern = ({
             </button>
           )}
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="m-0 font-head text-[28px] font-semibold">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="m-0 font-head text-2xl font-semibold md:text-[28px]">
                 {title}
               </h1>
               {titleExtra}
             </div>
-            {subtitle && <div className="text-ink-2">{subtitle}</div>}
+            {subtitle && (
+              <div className="text-[15px] text-ink-2">{subtitle}</div>
+            )}
           </div>
         </div>
         {extra && <div className="flex gap-2">{extra}</div>}

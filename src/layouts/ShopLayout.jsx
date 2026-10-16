@@ -1,19 +1,23 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import { Switch } from "antd";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Popover, Switch } from "antd";
+import { UseModal } from "@/components";
 import {
   AppstoreOutlined,
   BarChartOutlined,
   BellOutlined,
+  DownOutlined,
   FileTextOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   SettingOutlined,
   TeamOutlined,
+  UpOutlined,
 } from "@ant-design/icons";
 import Logo from "@/components/Logo";
 import useNotify from "@/hooks/useNotify";
 import { fetchSaveShop, mockOrders, mockShop } from "@/mock/mockData";
+import ShopAccount from "./ShopAccount";
 
 const MENU_LIST = [
   {
@@ -49,7 +53,10 @@ const MENU_LIST = [
 ];
 
 const ShopLayout = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(mockShop.isOpen);
+  const [shopName, setShopName] = useState(mockShop.shopName);
+  const [accountPlace, setAccountPlace] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [newOrderCount, setNewOrderCount] = useState(0);
   useEffect(() => {
@@ -61,14 +68,18 @@ const ShopLayout = () => {
   const onRefreshCount = () => {
     const result = mockOrders.filter((o) => o.status === "paid");
     setNewOrderCount(result.length);
+    setShopName(mockShop.shopName);
   };
 
   const { success, confirm } = useNotify();
   const openText = isOpen ? "เปิดรับคำสั่งซื้อ" : "ปิดรับคำสั่งซื้อ";
-  const openClass = isOpen ? "text-[#15803D]" : "text-ink-3";
+  const openClass = isOpen ? "text-[#0E6E5C]" : "text-ink-3";
 
   const onSubmitForm = (formValue) => {
-    const resp = fetchSaveShop({ isOpen: formValue.isOpen });
+    const resp = fetchSaveShop({
+      actionType: "open",
+      isOpen: formValue.isOpen,
+    });
     if (resp.success) {
       setIsOpen(formValue.isOpen);
     }
@@ -92,6 +103,57 @@ const ShopLayout = () => {
     });
   };
 
+  const onSwitch = (account) => {
+    setAccountPlace(null);
+    if (account.accountId === mockShop.accountId) return;
+    if (account.accountType === "customer") {
+      navigate("/c/nearby");
+      return;
+    }
+    const resp = fetchSaveShop({
+      actionType: "switch",
+      accountId: account.accountId,
+    });
+    if (resp.success) {
+      setShopName(mockShop.shopName);
+      success(`สลับไปที่ ${account.accountName} แล้ว`);
+    }
+  };
+
+  const onLogout = () => {
+    setAccountPlace(null);
+    confirm({
+      title: "ออกจากระบบ?",
+      content: "ต้องเข้าสู่ระบบด้วย LINE อีกครั้งเพื่อใช้งานร้าน",
+      okText: "ออกจากระบบ",
+      danger: true,
+      onOk: () => navigate("/login"),
+    });
+  };
+
+  const onAddShop = () => {
+    setAccountPlace(null);
+    const resp = fetchSaveShop({ actionType: "add" });
+    if (resp.success) {
+      setShopName(mockShop.shopName);
+      setIsOpen(false);
+      navigate("/shop/settings");
+      success("เพิ่มร้านใหม่แล้ว กรอกข้อมูลร้านให้ครบก่อนเปิดรับคำสั่งซื้อ");
+    }
+  };
+
+  const accountContent = (
+    <ShopAccount
+      title="สลับบัญชี"
+      className="w-[320px] p-1"
+      accountId={mockShop.accountId}
+      isOpen={isOpen}
+      onSwitch={onSwitch}
+      onAddShop={onAddShop}
+      onLogout={onLogout}
+    />
+  );
+
   const sidebarClass = (isActive) => {
     let className = "relative flex items-center rounded-xl text-ink";
     className += isCollapsed
@@ -102,8 +164,9 @@ const ShopLayout = () => {
   };
 
   const bottomClass = (isActive) => {
-    let className = "relative flex flex-col items-center gap-1 text-sm";
+    let className = "relative flex flex-col items-center gap-1 text-xs";
     className += isActive ? " font-semibold text-ink" : " text-ink-2";
+    if (isActive) className += " nav-active";
     return className;
   };
 
@@ -134,7 +197,7 @@ const ShopLayout = () => {
 
           {!isCollapsed && (
             <div className="flex flex-col gap-2 rounded-[14px] border border-solid border-line bg-bg p-3">
-              <b>{mockShop.shopName}</b>
+              <b>{shopName}</b>
               <div className="flex items-center justify-between text-base">
                 <span className={`flex items-center gap-2 ${openClass}`}>
                   <span className="h-2 w-2 rounded-full bg-current" />
@@ -173,32 +236,73 @@ const ShopLayout = () => {
               เปิดหน้านี้ค้างไว้เพื่อรับเสียงแจ้งเตือนคำสั่งซื้อใหม่
             </div>
           )}
-          <div
-            className={`flex items-center gap-2.5 ${isCollapsed ? "mt-auto justify-center" : "px-2"}`}
+          <Popover
+            content={accountContent}
+            trigger="click"
+            placement="topLeft"
+            arrow={false}
+            open={accountPlace === "side"}
+            onOpenChange={(open) => setAccountPlace(open ? "side" : null)}
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-soft font-semibold text-brand-text">
-              {mockShop.ownerName[0]}
-            </span>
-            {!isCollapsed && (
-              <div className="flex flex-col text-sm">
-                <b>{mockShop.ownerName}</b>
-                <span className="text-ink-2">เข้าสู่ระบบด้วย LINE</span>
-              </div>
-            )}
-          </div>
+            <button
+              type="button"
+              className={`flex cursor-pointer items-center gap-2.5 rounded-xl border-0 text-left text-ink ${isCollapsed ? "mt-auto justify-center bg-transparent p-1" : "bg-brand-soft p-2"}`}
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFE7B3] font-semibold text-brand-text">
+                {mockShop.ownerName[0]}
+              </span>
+              {!isCollapsed && (
+                <>
+                  <div className="flex flex-1 flex-col text-sm">
+                    <b>{mockShop.ownerName}</b>
+                    <span className="text-ink-2">เข้าสู่ระบบด้วย LINE</span>
+                  </div>
+                  <span className="flex flex-col text-[10px] text-ink-2">
+                    <UpOutlined />
+                    <DownOutlined />
+                  </span>
+                </>
+              )}
+            </button>
+          </Popover>
         </nav>
       </aside>
 
       <header className="sticky top-0 z-10 flex h-[60px] items-center gap-2.5 border-0 border-b border-solid border-line bg-white px-4 lg:hidden">
         <Logo size={36} />
-        <div className="flex flex-1 flex-col">
-          <b>{mockShop.shopName}</b>
-          <span className={`text-sm ${openClass}`}>{openText}</span>
-        </div>
+        <button
+          type="button"
+          className="flex flex-1 cursor-pointer flex-col items-start border-0 bg-transparent p-0 text-left text-base text-ink"
+          onClick={() => setAccountPlace("top")}
+        >
+          <b className="flex items-center gap-1.5 font-head text-[17px]">
+            {shopName}
+            <DownOutlined className="text-xs" />
+          </b>
+          <span className={`text-xs font-semibold ${openClass}`}>
+            {openText}
+          </span>
+        </button>
         <Switch checked={isOpen} onChange={onToggleOpen} />
       </header>
 
-      <main className="box-border min-w-0 flex-1 p-4 pb-[116px] lg:p-8">
+      <UseModal
+        open={accountPlace === "top"}
+        onHandleCancel={() => setAccountPlace(null)}
+        size="small"
+        readOnly
+      >
+        <ShopAccount
+          title="สลับบัญชีที่ใช้งาน"
+          accountId={mockShop.accountId}
+          isOpen={isOpen}
+          onSwitch={onSwitch}
+          onAddShop={onAddShop}
+          onLogout={onLogout}
+        />
+      </UseModal>
+
+      <main className="box-border min-w-0 flex-1 p-8 pb-[116px] lg:pb-8">
         <div className={isCollapsed ? "max-w-[1400px]" : "max-w-[1136px]"}>
           <Outlet />
         </div>
@@ -214,7 +318,7 @@ const ShopLayout = () => {
             <span className="relative text-2xl">
               {menu.icon}
               {menu.path === "/shop/orders" && newOrderCount > 0 && (
-                <span className="absolute -right-3 -top-1 grid h-6 min-w-6 place-items-center rounded-full bg-danger px-1 text-sm font-semibold text-white">
+                <span className="absolute -right-2.5 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#B42318] px-1 text-[11px] font-semibold leading-none text-white">
                   {newOrderCount}
                 </span>
               )}

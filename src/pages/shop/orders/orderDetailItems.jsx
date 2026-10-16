@@ -8,28 +8,30 @@ const OrderDetailItems = ({ order }) => {
       {order.items.map((item, index) => (
         <div
           key={`${item.menuId}-${index}`}
-          className="flex gap-3 border-0 border-b border-solid border-line pb-3"
+          className="flex gap-3 border-0 border-b border-solid border-[#F3F2EF] pb-3"
         >
-          <b className="w-8 text-brand-text">{item.quantity}×</b>
-          <div className="flex-1">
-            <b>{item.menuName}</b>
-            <div className="text-sm text-ink-2">
+          <b className="w-8 font-head text-lg text-brand-text">
+            {item.quantity}×
+          </b>
+          <div className="flex flex-1 flex-col">
+            <b className="text-[15px]">{item.menuName}</b>
+            <span className="text-sm text-ink-2">
               {optionText(item) || "ไม่มีตัวเลือก"}
-            </div>
+            </span>
             {item.note && (
-              <div className="text-sm text-brand-text">
+              <span className="text-sm text-brand-text">
                 หมายเหตุ: {item.note}
-              </div>
+              </span>
             )}
           </div>
-          <b>{formatPrice(itemTotal(item))}</b>
+          <b className="text-[15px]">{formatPrice(itemTotal(item))}</b>
         </div>
       ))}
-      <div className="flex justify-between text-ink-2">
+      <div className="flex justify-between text-[15px] text-ink-2">
         <span>ค่าจัดส่ง</span>
         <span>{formatPrice(order.deliveryFee)}</span>
       </div>
-      <div className="flex justify-between text-xl font-semibold">
+      <div className="flex justify-between font-head text-xl font-semibold">
         <span>ยอดรวม</span>
         <span className="text-brand-text">{formatPrice(paidTotal(order))}</span>
       </div>

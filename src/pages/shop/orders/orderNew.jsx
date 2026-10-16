@@ -4,7 +4,7 @@ import { BellOutlined } from "@ant-design/icons";
 import { itemText, paidTotal } from "@/mock/mockData";
 import { formatPrice } from "@/utils/format";
 
-const LIMIT_MINUTES = 10;
+const LIMIT_MINUTES = 15;
 
 const getSecondsLeft = (createdAt) => {
   const end = new Date(createdAt).getTime() + LIMIT_MINUTES * 60000;
@@ -32,43 +32,46 @@ const OrderNew = ({ order, onAccept, onReject, onTimeout, onView }) => {
   const second = String(seconds % 60).padStart(2, "0");
 
   return (
-    <div className="flex flex-col gap-4 rounded-card bg-ink p-5 text-white lg:flex-row lg:items-center">
+    <div className="flex flex-col gap-4 rounded-[18px] bg-ink px-5 py-4 text-white lg:flex-row lg:items-center">
       <div className="flex flex-1 items-center gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-brand text-[28px] text-ink">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-brand-strong text-[26px] text-ink">
           <BellOutlined />
         </div>
-        <div>
-          <div className="text-lg font-semibold">
-            คำสั่งซื้อใหม่ #{order.orderId} · {formatPrice(paidTotal(order))}
+        <div className="flex flex-col gap-0.5">
+          <div className="font-head text-lg font-bold">
+            คำสั่งซื้อใหม่{" "}
+            <span className="whitespace-nowrap">
+              #{order.orderId} · {formatPrice(paidTotal(order))}
+            </span>
           </div>
-          {isManualSlip ? (
-            <div className="font-semibold text-brand">
-              ระบบตรวจสลิปไม่ได้ ดูสลิปให้ถูกต้องก่อนรับ
-            </div>
-          ) : (
-            <div className="text-white/80">สลิปผ่านการตรวจแล้ว</div>
-          )}
-          <div className="text-white/80">
-            {itemText(order)} · ส่ง {order.distanceKm} กม.
+          <div className="text-sm text-[#EEEDEA]">
+            {isManualSlip ? (
+              <b className="text-brand">
+                ระบบตรวจสลิปไม่ได้ ดูสลิปให้ถูกต้องก่อนรับ
+              </b>
+            ) : (
+              "สลิปผ่านการตรวจแล้ว"
+            )}{" "}
+            · {itemText(order)}
           </div>
         </div>
       </div>
-      <div>
-        <div className="text-sm text-white/70">ยกเลิกอัตโนมัติใน</div>
-        <div className="font-head text-2xl font-semibold text-brand">
+      <div className="flex flex-col gap-0.5 lg:items-end">
+        <div className="text-xs text-[#EEEDEA]">ยกเลิกอัตโนมัติใน</div>
+        <div className="font-head text-[22px] font-bold leading-tight text-brand-strong">
           {minute}:{second}
         </div>
       </div>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         {isManualSlip && (
-          <Button ghost onClick={onView}>
+          <Button ghost className="new-ghost" onClick={onView}>
             ดูสลิป
           </Button>
         )}
-        <Button ghost onClick={onReject}>
+        <Button ghost className="new-ghost" onClick={onReject}>
           ปฏิเสธ
         </Button>
-        <Button type="primary" onClick={onAccept}>
+        <Button type="primary" className="new-accept" onClick={onAccept}>
           รับคำสั่งซื้อ
         </Button>
       </div>

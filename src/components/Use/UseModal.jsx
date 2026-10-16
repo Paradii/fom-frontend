@@ -12,20 +12,27 @@ const UseModal = ({
   saveText = "บันทึก",
   readOnly,
   footerLeft,
+  footer,
   danger,
+  wrapClassName = "sheet-modal",
   children,
 }) => {
   const width = size === "small" ? 600 : 800;
 
-  const footer = (
+  const defaultFooter = (
     <div className="flex items-center justify-end gap-2">
       {footerLeft && <div className="mr-auto">{footerLeft}</div>}
       {readOnly ? (
-        <ButtonClose onClick={onHandleCancel} />
+        <ButtonClose className="flex-1 md:flex-none" onClick={onHandleCancel} />
       ) : (
         <>
-          <ButtonCancel onClick={onHandleCancel} disabled={loading} />
+          <ButtonCancel
+            className={footerLeft ? "" : "w-[110px] md:w-auto"}
+            onClick={onHandleCancel}
+            disabled={loading}
+          />
           <ButtonSave
+            className="flex-1 md:flex-none"
             text={saveText}
             onClick={onSave}
             loading={loading}
@@ -43,9 +50,10 @@ const UseModal = ({
       onCancel={onHandleCancel}
       title={title}
       width={width}
-      footer={footer}
+      footer={footer || defaultFooter}
       destroyOnClose
       centered
+      wrapClassName={wrapClassName}
       maskClosable={false}
     >
       {children}

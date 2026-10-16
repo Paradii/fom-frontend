@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Button, Segmented } from "antd";
-import { CalendarOutlined } from "@ant-design/icons";
+import { DatePicker, Segmented } from "antd";
 import PagePattern from "@/layouts/PagePattern";
 import { mockOrders, paidTotal } from "@/mock/mockData";
 import ReportSummary from "./reportSummary";
 import ReportChart from "./reportChart";
 import ReportTopMenu from "./reportTopMenu";
-import ModalDateRange from "./modalDateRange";
+
+const { RangePicker } = DatePicker;
 
 const PERIODS = [
   { label: "รายวัน", value: "day", text: "วันนี้", prevText: "เมื่อวาน" },
@@ -104,7 +104,7 @@ const Report = () => {
   const [summary, setSummary] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [topMenus, setTopMenus] = useState([]);
-  const [modal, setModal] = useState({ open: false, data: null });
+  const [rangeValue, setRangeValue] = useState(null);
 
   useEffect(() => {
     onSearchForm();
@@ -113,11 +113,24 @@ const Report = () => {
   const onChangePeriod = (value) => {
     setPeriod(value);
     setRange(getRange(value));
+    setRangeValue(null);
   };
 
-  const onSaveRange = (from, to) => {
+  const onChangeRange = (dates) => {
+    if (!dates) {
+      onChangePeriod("week");
+      return;
+    }
     setPeriod(null);
-    setRange({ from: startOfDay(from), to: startOfDay(to) });
+    setRangeValue(dates);
+    setRange({
+      from: startOfDay(dates[0].toDate()),
+      to: startOfDay(dates[1].toDate()),
+    });
+  };
+
+  const disabledDate = (current) => {
+    return current.toDate() > new Date();
   };
 
   const onSearchForm = () => {
@@ -186,19 +199,26 @@ const Report = () => {
       title="สรุปยอดขาย"
       subtitle={`${subtitle} · นับเฉพาะคำสั่งซื้อที่จัดส่งสำเร็จ`}
       extra={
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
+          <RangePicker
+            className="order-2 h-[46px] w-full rounded-xl md:order-1 md:w-auto"
+            size="large"
+            value={rangeValue}
+            onChange={onChangeRange}
+            disabledDate={disabledDate}
+            format="D MMM BBBB"
+            placeholder={["ตั้งแต่วันที่", "ถึงวันที่"]}
+            inputReadOnly
+            popupClassName="range-popup"
+          />
           <Segmented
+            className="report-segment order-1 w-full md:order-2 md:w-auto md:self-start"
+            block
             size="large"
             options={PERIODS}
             value={period}
             onChange={onChangePeriod}
           />
-          <Button
-            icon={<CalendarOutlined />}
-            onClick={() => setModal({ open: true, data: range })}
-          >
-            {period ? "เลือกช่วงวันที่" : formatRange(range)}
-          </Button>
         </div>
       }
     >
@@ -212,8 +232,6 @@ const Report = () => {
         <ReportChart chartData={chartData} />
         <ReportTopMenu topMenus={topMenus} />
       </div>
-
-      <ModalDateRange modal={modal} setModal={setModal} onSave={onSaveRange} />
     </PagePattern>
   );
 };

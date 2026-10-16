@@ -1,8 +1,7 @@
-import CustomerLogin from "@/pages/customer/login";
-import ShopLogin from "@/pages/shop/login";
+import Login from "@/pages/login/login";
+import Location from "@/pages/customer/location";
 import Nearby from "@/pages/customer/shops/nearby";
 import Shop from "@/pages/customer/shops/shop";
-import MenuOption from "@/pages/customer/order/menuOption";
 import Cart from "@/pages/customer/order/cart";
 import Address from "@/pages/customer/order/address";
 import Payment from "@/pages/customer/payment/payment";
@@ -16,10 +15,10 @@ import Account from "@/pages/customer/account";
 import Order from "@/pages/shop/orders/order";
 import OrderDetail from "@/pages/shop/orders/orderDetail";
 import Menu from "@/pages/shop/menus/menu";
-import ModalAddMenu from "@/pages/shop/menus/modalAddMenu";
+import MenuForm from "@/pages/shop/menus/menuForm";
 import Report from "@/pages/shop/reports/report";
 import Customer from "@/pages/shop/customers/customer";
-import Setting from "@/pages/shop/setting";
+import Setting from "@/pages/shop/settings/setting";
 import Jobs from "@/pages/rider/jobs";
 import JobDetail from "@/pages/rider/jobDetail";
 import Deliver from "@/pages/rider/deliver";
@@ -27,15 +26,15 @@ import Deliver from "@/pages/rider/deliver";
 export const routes = [
   {
     code: "AUTH01",
-    title: "เข้าสู่ระบบ (ลูกค้า)",
-    path: "/c/login",
-    element: <CustomerLogin />,
+    title: "เข้าสู่ระบบ",
+    path: "/login",
+    element: <Login />,
   },
   {
-    code: "AUTH02",
-    title: "เข้าสู่ระบบ (ร้านค้า)",
-    path: "/shop/login",
-    element: <ShopLogin />,
+    code: "AUTH04",
+    title: "ขอใช้ตำแหน่ง",
+    path: "/c/location",
+    element: <Location />,
   },
   {
     code: "SHP01",
@@ -50,12 +49,6 @@ export const routes = [
     element: <Shop />,
   },
   {
-    code: "ORD01",
-    title: "เลือกตัวเลือกเมนู",
-    path: "/c/menu/:menuId",
-    element: <MenuOption />,
-  },
-  {
     code: "ORD02",
     title: "ตะกร้า",
     path: "/c/cart",
@@ -64,7 +57,7 @@ export const routes = [
   {
     code: "ORD03",
     title: "ที่อยู่จัดส่ง",
-    path: "/c/address",
+    path: "/c/address/:from",
     element: <Address />,
   },
   {
@@ -141,7 +134,7 @@ export const routes = [
     layout: "shop",
     title: "เพิ่ม/แก้ไขเมนู",
     path: "/shop/menus/:menuId",
-    element: <ModalAddMenu />,
+    element: <MenuForm />,
   },
   {
     code: "RPT01",
@@ -167,19 +160,19 @@ export const routes = [
   {
     code: "DLV01",
     title: "งานจัดส่ง",
-    path: "/rider/jobs",
+    path: "/rider/:token",
     element: <Jobs />,
   },
   {
     code: "DLV02",
     title: "รายละเอียดงาน",
-    path: "/rider/jobs/:orderId",
+    path: "/rider/:token/order/:orderId",
     element: <JobDetail />,
   },
   {
     code: "DLV03",
     title: "ยืนยันส่งสำเร็จ",
-    path: "/rider/deliver/:orderId",
+    path: "/rider/:token/deliver/:orderId",
     element: <Deliver />,
   },
 ];

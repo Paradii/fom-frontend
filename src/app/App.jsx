@@ -6,7 +6,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/shop/orders" />} />
+        <Route path="/" element={<Navigate to="/login" />} />
         {routes
           .filter((r) => r.layout !== "shop")
           .map((r) => (

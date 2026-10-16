@@ -10,6 +10,7 @@ const useNotify = () => {
       content,
       okText: "ตกลง",
       centered: true,
+      wrapClassName: "sheet-modal",
     });
   const warning = (content) => message.warning(content);
   const confirm = ({ title, content, onOk, okText = "ยืนยัน", danger }) =>
@@ -21,6 +22,7 @@ const useNotify = () => {
       cancelText: "ยกเลิก",
       okButtonProps: { danger },
       centered: true,
+      wrapClassName: "sheet-modal",
     });
   return { success, error, warning, confirm };
 };

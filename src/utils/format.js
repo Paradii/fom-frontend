@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export const formatDate = (iso) => {
   return new Date(iso).toLocaleDateString("th-TH", {
     day: "numeric",
@@ -54,4 +56,31 @@ export const formatDay = (date) => {
     year: "numeric",
   });
   return `${DAYS[date.getDay()]} ${text}`;
+};
+
+export const onlyDigits = (value) => {
+  return String(value ?? "").replace(/\D/g, "");
+};
+
+export const formatBaht = (value) => {
+  const digits = onlyDigits(value);
+  return digits ? `${digits} บาท` : "";
+};
+
+export const formatThaiDate = (iso) => {
+  return dayjs(iso).locale("th").format("D MMM BBBB");
+};
+
+export const formatDateTime = (iso) => {
+  return dayjs(iso).locale("th").format("D MMM BBBB · HH:mm");
+};
+
+export const formatCountdown = (seconds) => {
+  const minute = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const second = String(seconds % 60).padStart(2, "0");
+  return `${minute}:${second}`;
+};
+
+export const maskPromptPay = (id) => {
+  return `xxx-xxx-${onlyDigits(id).slice(-4)}`;
 };

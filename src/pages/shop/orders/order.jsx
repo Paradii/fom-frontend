@@ -1,26 +1,38 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "antd";
-import { MutedOutlined, SoundOutlined } from "@ant-design/icons";
+import {
+  MutedOutlined,
+  QrcodeOutlined,
+  SoundOutlined,
+} from "@ant-design/icons";
 import PagePattern from "@/layouts/PagePattern";
 import useNotify from "@/hooks/useNotify";
-import { fetchSaveOrder, mockOrders, paidTotal } from "@/mock/mockData";
+import {
+  fetchSaveBatch,
+  fetchSaveOrder,
+  mockBatches,
+  mockOrders,
+  paidTotal,
+} from "@/mock/mockData";
 import { formatDay, formatPrice } from "@/utils/format";
 import { playNewOrderSound } from "@/services/sound";
-import { getPosition } from "@/utils/geo";
 import OrderNew from "./orderNew";
 import OrderGroup from "./orderGroup";
+import OrderCard from "./orderCard";
+import OrderReadyCard from "./orderReadyCard";
+import OrderBatch from "./orderBatch";
+import ModalQr from "./modalQr";
 import ModalReject from "./modalReject";
 import OrderCancelled from "./orderCancelled";
 import ModalRefund from "./modalRefund";
-import ModalDelivered from "./modalDelivered";
-
-const GROUPS = ["accepted", "preparing", "delivering", "completed"];
 
 const Order = () => {
   const navigate = useNavigate();
-  const { success, warning } = useNotify();
+  const { success, warning, error, confirm } = useNotify();
   const [orders, setOrders] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [isSoundOn, setIsSoundOn] = useState(true);
   const [refundModal, setRefundModal] = useState({
     open: false,
@@ -30,7 +42,7 @@ const Order = () => {
     open: false,
     data: null,
   });
-  const [deliveredModal, setDeliveredModal] = useState({
+  const [qrModal, setQrModal] = useState({
     open: false,
     data: null,
   });
@@ -52,6 +64,7 @@ const Order = () => {
     });
     result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     setOrders([...result]);
+    setBatches(mockBatches.filter((b) => b.status === "active"));
   };
 
   const onSubmitForm = ({ formValue, actionType }) => {
@@ -62,8 +75,6 @@ const Order = () => {
       reason: formValue.reason,
       isRefund: formValue.isRefund,
       slipUrl: formValue.slipUrl,
-      photoUrl: formValue.photoUrl,
-      proof: formValue.proof,
       by: formValue.by || "ร้าน",
     };
     const resp = fetchSaveOrder(payload);
@@ -72,29 +83,67 @@ const Order = () => {
     }
   };
 
-  const onChangeStatus = (order, status, message) => {
-    if (status === "completed") {
-      setDeliveredModal({ open: true, data: order });
-      return;
-    }
+  const onAccept = (order) => {
     onSubmitForm({
-      formValue: { orderId: order.orderId, status: status },
-      actionType: "status",
+      formValue: { orderId: order.orderId },
+      actionType: "accept",
     });
-    success(message);
+    success("รับคำสั่งซื้อแล้ว เริ่มทำได้เลย");
   };
 
-  const onSaveDelivered = (order, photo) => {
-    getPosition((position) => {
-      onSubmitForm({
-        formValue: {
-          orderId: order.orderId,
-          photoUrl: photo.url,
-          proof: position,
-        },
-        actionType: "delivered",
-      });
-      success("บันทึกส่งสำเร็จพร้อมรูปหลักฐานแล้ว");
+  const onReady = (order) => {
+    onSubmitForm({
+      formValue: { orderId: order.orderId, status: "ready" },
+      actionType: "status",
+    });
+    success(`#${order.orderId} พร้อมส่งแล้ว`);
+  };
+
+  const onSelect = (order) => {
+    if (selectedIds.includes(order.orderId)) {
+      setSelectedIds(selectedIds.filter((id) => id !== order.orderId));
+    } else {
+      setSelectedIds([...selectedIds, order.orderId]);
+    }
+  };
+
+  const onSelectAll = (e) => {
+    e.stopPropagation();
+    if (selectedOrders.length === readyOrders.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(readyOrders.map((o) => o.orderId));
+    }
+  };
+
+  const onSaveBatch = (orderIds) => {
+    const resp = fetchSaveBatch({ actionType: "A", orderIds: orderIds });
+    if (resp.success) {
+      setSelectedIds([]);
+      onSearchForm();
+      setQrModal({ open: true, data: resp.batch });
+    }
+  };
+
+  const onCancelBatch = (batch) => {
+    confirm({
+      title: `ยกเลิก QR รอบส่ง ${batch.batchCode}?`,
+      content: "ลิงก์นี้จะใช้ไม่ได้ ออเดอร์จะกลับไปอยู่ในช่องพร้อมส่ง",
+      okText: "ยกเลิก QR",
+      danger: true,
+      onOk: () => {
+        const resp = fetchSaveBatch({
+          actionType: "cancel",
+          batchId: batch.batchId,
+        });
+        if (resp.success) {
+          setQrModal({ open: false, data: null });
+          onSearchForm();
+          success("ยกเลิก QR แล้ว");
+        } else {
+          error("คนส่งสแกนรอบนี้ไปแล้ว ยกเลิก QR ไม่ได้");
+        }
+      },
     });
   };
 
@@ -118,7 +167,7 @@ const Order = () => {
     onSubmitForm({
       formValue: {
         orderId: order.orderId,
-        reason: "ร้านไม่รับภายใน 10 นาที",
+        reason: "ร้านไม่รับภายใน 15 นาที",
         isRefund: true,
         by: "ระบบ",
       },
@@ -148,6 +197,25 @@ const Order = () => {
     return new Date(o.createdAt).toDateString() === today;
   });
   const newOrders = orders.filter((o) => o.status === "paid");
+  const preparingOrders = orders.filter((o) => o.status === "preparing");
+  const readyOrders = orders.filter((o) => {
+    return o.status === "ready" && !o.batchId;
+  });
+  const completedOrders = orders.filter((o) => o.status === "completed");
+  const selectedOrders = readyOrders.filter((o) => {
+    return selectedIds.includes(o.orderId);
+  });
+  let selectedTotal = 0;
+  selectedOrders.forEach((o) => {
+    selectedTotal += paidTotal(o);
+  });
+  let batchCount = 0;
+  batches.forEach((b) => {
+    batchCount += b.orderIds.length;
+  });
+  const getBatchOrders = (batch) => {
+    return mockOrders.filter((o) => batch.orderIds.includes(o.orderId));
+  };
   const cancelledOrders = orders.filter((o) => o.status === "cancelled");
   const refundCount = cancelledOrders.filter((o) => {
     return o.refundStatus === "pending";
@@ -168,25 +236,29 @@ const Order = () => {
       subtitle={`${formatDay(new Date())} · อัปเดตอัตโนมัติ`}
       extra={
         <div className="flex flex-wrap gap-2">
-          <div className="rounded-xl border border-solid border-line bg-white px-4 py-2.5">
+          <div className="flex h-[41px] items-center gap-1 rounded-xl border border-solid border-line bg-white px-[15px] text-sm">
             ทั้งหมด <b>{todayOrders.length}</b>
           </div>
-          <div className="rounded-xl border border-solid border-line bg-white px-4 py-2.5">
+          <div className="flex h-[41px] items-center gap-1 rounded-xl border border-solid border-line bg-white px-[15px] text-sm">
             ยอดวันนี้ <b>{formatPrice(todayTotal)}</b>
           </div>
           {refundCount > 0 && (
-            <Button danger onClick={onGoCancelled}>
+            <Button
+              danger
+              className="head-chip order-last md:order-none"
+              onClick={onGoCancelled}
+            >
               รอโอนคืน <b>{refundCount}</b>
             </Button>
           )}
           <Button
             icon={isSoundOn ? <SoundOutlined /> : <MutedOutlined />}
             onClick={onToggleSound}
-            className={
+            className={`head-chip font-normal ${
               isSoundOn
-                ? "border-brand-line bg-brand-soft text-brand-text"
+                ? "border-line bg-white text-ink md:border-brand-line md:bg-brand-soft md:text-brand-text"
                 : "border-ink bg-ink text-white"
-            }
+            }`}
           >
             {isSoundOn ? "เสียงเปิดอยู่" : "เสียงปิดอยู่"}
           </Button>
@@ -197,23 +269,93 @@ const Order = () => {
         <OrderNew
           key={o.orderId}
           order={o}
-          onAccept={() => onChangeStatus(o, "accepted", "รับคำสั่งซื้อแล้ว")}
+          onAccept={() => onAccept(o)}
           onReject={() => onReject(o)}
           onTimeout={() => onTimeout(o)}
           onView={() => onView(o)}
         />
       ))}
 
-      <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 min-[1440px]:grid-cols-4">
-        {GROUPS.map((status) => (
-          <OrderGroup
-            key={status}
-            status={status}
-            orders={orders.filter((o) => o.status === status)}
-            onChangeStatus={onChangeStatus}
-            onView={onView}
-          />
-        ))}
+      <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 min-[1440px]:grid-cols-[1fr_1.4fr_1.1fr_0.9fr]">
+        <OrderGroup status="preparing" count={preparingOrders.length}>
+          {preparingOrders.map((o) => (
+            <OrderCard
+              key={o.orderId}
+              order={o}
+              onReady={onReady}
+              onView={onView}
+            />
+          ))}
+        </OrderGroup>
+        <OrderGroup
+          status="ready"
+          count={readyOrders.length}
+          extra={
+            readyOrders.length > 0 && (
+              <a
+                className="whitespace-nowrap text-sm font-semibold text-brand-text underline"
+                onClick={onSelectAll}
+              >
+                {selectedOrders.length === readyOrders.length
+                  ? "ยกเลิกเลือก"
+                  : "เลือกทั้งหมด"}
+              </a>
+            )
+          }
+        >
+          {readyOrders.map((o) => (
+            <OrderReadyCard
+              key={o.orderId}
+              order={o}
+              isSelected={selectedIds.includes(o.orderId)}
+              onSelect={onSelect}
+              onQr={() => onSaveBatch([o.orderId])}
+            />
+          ))}
+          {selectedOrders.length > 0 && (
+            <div className="fixed inset-x-0 bottom-[84px] z-10 flex flex-col gap-2.5 bg-[#1E1C17] p-3 text-white lg:static lg:rounded-[14px]">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[#D9D4C5]">
+                  เลือกแล้ว{" "}
+                  <b className="font-head text-[17px] text-white">
+                    {selectedOrders.length}
+                  </b>{" "}
+                  ออเดอร์
+                </span>
+                <b className="font-head text-[17px]">
+                  {formatPrice(selectedTotal)}
+                </b>
+              </div>
+              <Button
+                type="primary"
+                size="large"
+                className="font-head"
+                icon={<QrcodeOutlined />}
+                onClick={() =>
+                  onSaveBatch(selectedOrders.map((o) => o.orderId))
+                }
+              >
+                สร้าง QR รอบส่ง
+              </Button>
+            </div>
+          )}
+        </OrderGroup>
+        <OrderGroup status="delivering" count={batchCount}>
+          {batches.map((b) => (
+            <OrderBatch
+              key={b.batchId}
+              batch={b}
+              orders={getBatchOrders(b)}
+              onQr={(batch) => setQrModal({ open: true, data: batch })}
+              onView={onView}
+            />
+          ))}
+        </OrderGroup>
+        <OrderGroup status="completed" count={completedOrders.length}>
+          {completedOrders.map((o) => (
+            <OrderCard key={o.orderId} order={o} onView={onView} />
+          ))}
+        </OrderGroup>
       </div>
       <OrderCancelled
         orders={cancelledOrders}
@@ -227,11 +369,12 @@ const Order = () => {
         setModal={setRefundModal}
         onSave={onSaveRefund}
       />
-      <ModalDelivered
-        modal={deliveredModal}
-        setModal={setDeliveredModal}
-        onSave={onSaveDelivered}
+      <ModalQr
+        modal={qrModal}
+        setModal={setQrModal}
+        onCancelBatch={onCancelBatch}
       />
+      {selectedOrders.length > 0 && <div className="h-28 lg:hidden" />}
     </PagePattern>
   );
 };

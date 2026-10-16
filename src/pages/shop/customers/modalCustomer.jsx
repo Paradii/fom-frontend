@@ -22,7 +22,6 @@ const ModalCustomer = ({ modal, setModal }) => {
           <Descriptions.Item label="ชื่อ LINE">
             {data.displayName}
           </Descriptions.Item>
-          <Descriptions.Item label="เบอร์โทร">{data.phone}</Descriptions.Item>
           <Descriptions.Item label="ที่อยู่ล่าสุด">
             {data.address}
           </Descriptions.Item>

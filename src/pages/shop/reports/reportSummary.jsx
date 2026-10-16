@@ -1,7 +1,7 @@
 import { formatPrice } from "@/utils/format";
 
-const GREEN = "text-[#15803D]";
-const RED = "text-danger";
+const GREEN = "text-[#0E6E5C]";
+const RED = "text-[#8A1C1C]";
 const GRAY = "text-ink-3";
 
 const ReportSummary = ({ summary, prevText }) => {
@@ -59,11 +59,11 @@ const ReportSummary = ({ summary, prevText }) => {
           key={item.label}
           className="rounded-card border border-solid border-line bg-white p-5"
         >
-          <div className="text-ink-2">{item.label}</div>
-          <div className="mt-1 font-head text-[32px] font-semibold">
+          <div className="text-sm text-ink-2">{item.label}</div>
+          <div className="mt-1 font-head text-[30px] font-semibold md:text-[32px]">
             {item.value}
           </div>
-          <div className={`text-sm ${item.color}`}>{item.note}</div>
+          <div className={`text-[13px] ${item.color}`}>{item.note}</div>
         </div>
       ))}
     </div>

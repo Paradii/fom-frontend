@@ -77,7 +77,6 @@ const Customer = () => {
         lastOrderAt: lastOrder ? lastOrder.createdAt : null,
         firstOrderAt: firstOrder ? firstOrder.createdAt : null,
         address: lastOrder ? lastOrder.deliveryAddress : "-",
-        distanceKm: lastOrder ? lastOrder.distanceKm : null,
         favoriteMenus: getFavoriteMenus(orders),
       };
     });
@@ -96,8 +95,7 @@ const Customer = () => {
 
     const keyword = formValue.keyword?.trim() || "";
     const result = activeCustomers.filter((c) => {
-      const matchName =
-        c.displayName.includes(keyword) || c.phone.includes(keyword);
+      const matchName = c.displayName.includes(keyword);
       const matchOrders =
         formValue.minOrders === null || c.orderCount >= formValue.minOrders;
       return matchName && matchOrders;

@@ -1,26 +1,16 @@
 import { Button } from "antd";
-import {
-  ClearOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 
 export const ButtonSearch = ({ text = "ค้นหา", ...props }) => {
   return (
-    <Button type="primary" icon={<SearchOutlined />} {...props}>
+    <Button type="primary" {...props}>
       {text}
     </Button>
   );
 };
 
 export const ButtonClear = ({ text = "ล้าง", ...props }) => {
-  return (
-    <Button icon={<ClearOutlined />} {...props}>
-      {text}
-    </Button>
-  );
+  return <Button {...props}>{text}</Button>;
 };
 
 export const ButtonAdd = ({ text = "เพิ่ม", ...props }) => {

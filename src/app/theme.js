@@ -46,6 +46,7 @@ export const theme = {
       optionPadding: "8px 10px",
     },
     Checkbox: { colorPrimary: "#FFC529" },
+    Radio: { radioSize: 20, dotSize: 10 },
     Modal: { titleFontSize: 22 },
     Segmented: { trackBg: "#EFEEEA", itemSelectedBg: "#FFFFFF" },
     Descriptions: {
@@ -53,6 +54,12 @@ export const theme = {
       itemPaddingBottom: 16,
     },
     Tag: { defaultBg: "#FAFAF8" },
-    Table: { cellPaddingBlock: 14 },
+    Table: {
+      cellPaddingBlock: 14,
+      headerBg: "#FAFAF8",
+      headerColor: "#77756F",
+      headerSplitColor: "transparent",
+      headerBorderRadius: 0,
+    },
   },
 };

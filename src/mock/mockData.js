@@ -13,13 +13,50 @@ const minutesAgo = (minutes) => {
 
 export const mockShop = {
   shopId: 1,
+  accountId: 1,
   shopName: "ครัวป้าแดง",
   ownerName: "ป้าแดง ใจดี",
   phone: "081-234-5678",
   address: "12/3 ซอยประชาอุทิศ 5 ต.บางมด อ.ทุ่งครุ กรุงเทพฯ",
   isOpen: true,
+  description: "อาหารตามสั่ง รสจัดจ้าน ทำสดทุกจาน",
+  openHours: [
+    { day: "จันทร์", isOpen: true, openTime: "08:00", closeTime: "20:00" },
+    { day: "อังคาร", isOpen: true, openTime: "08:00", closeTime: "20:00" },
+    { day: "พุธ", isOpen: false, openTime: "08:00", closeTime: "20:00" },
+    { day: "พฤหัสบดี", isOpen: true, openTime: "08:00", closeTime: "20:00" },
+    { day: "ศุกร์", isOpen: true, openTime: "08:00", closeTime: "21:00" },
+    { day: "เสาร์", isOpen: true, openTime: "09:00", closeTime: "21:00" },
+    { day: "อาทิตย์", isOpen: true, openTime: "09:00", closeTime: "20:00" },
+  ],
   deliveryFee: 20,
+  minOrder: 60,
+  promptPayId: "081-234-5678",
+  accountName: "นางแดง ใจดี",
 };
+
+export const mockAccounts = [
+  {
+    accountId: 1,
+    accountType: "shop",
+    accountName: "ครัวป้าแดง",
+    newOrderCount: 0,
+    isOpen: true,
+  },
+  {
+    accountId: 2,
+    accountType: "shop",
+    accountName: "ข้าวมันไก่ป้าแดง สาขา 2",
+    newOrderCount: 2,
+    isOpen: true,
+  },
+  {
+    accountId: 3,
+    accountType: "customer",
+    accountName: "ป้าแดง ใจดี",
+    newOrderCount: 0,
+  },
+];
 
 export const mockCategories = [
   { categoryId: 1, categoryName: "ข้าว" },
@@ -288,9 +325,27 @@ export const mockCustomers = [
   },
 ];
 
-export const mockRiders = [
-  { riderId: 1, riderName: "สมศักดิ์ ส่งไว", phone: "080-123-4567" },
-  { riderId: 2, riderName: "วิชัย ใจดี", phone: "080-765-4321" },
+export const mockBatches = [
+  {
+    batchId: 1,
+    batchCode: "R-03",
+    token: "r03x7k2m",
+    orderIds: [1005, 1006],
+    status: "active",
+    createdAt: minutesAgo(27),
+    scannedAt: minutesAgo(25),
+    cancelledAt: null,
+  },
+  {
+    batchId: 2,
+    batchCode: "R-02",
+    token: "r02p4n8q",
+    orderIds: [1007],
+    status: "completed",
+    createdAt: minutesAgo(107),
+    scannedAt: minutesAgo(105),
+    cancelledAt: null,
+  },
 ];
 
 export const mockOrders = [
@@ -298,7 +353,6 @@ export const mockOrders = [
     orderId: 1001,
     customerId: 1,
     payerName: "ณัฐธิดา มีสุข",
-    riderId: null,
     status: "paid",
     items: [
       {
@@ -321,8 +375,6 @@ export const mockOrders = [
       },
     ],
     deliveryAddress: "หอพักชวนชม ห้อง 305",
-    distanceKm: 0.6,
-    pin: { lat: 13.8216, lng: 100.51992 },
     deliveryFee: 20,
     createdAt: minutesAgo(2),
   },
@@ -331,14 +383,11 @@ export const mockOrders = [
     customerId: 2,
     payerName: "ธนากร ศรีวงศ์",
     slipCheck: "manual",
-    riderId: null,
     status: "paid",
     items: [
       { menuId: 6, menuName: "ต้มยำกุ้งน้ำข้น", quantity: 1, price: 120 },
     ],
     deliveryAddress: "คอนโด The Base ตึก B ชั้น 8",
-    distanceKm: 1.4,
-    pin: { lat: 13.8176, lng: 100.52728 },
     deliveryFee: 20,
     createdAt: minutesAgo(5),
   },
@@ -346,15 +395,12 @@ export const mockOrders = [
     orderId: 1003,
     customerId: 3,
     payerName: "แพรวา ทองดี",
-    riderId: null,
-    status: "accepted",
+    status: "preparing",
     items: [
       { menuId: 4, menuName: "ผัดซีอิ๊วหมู", quantity: 1, price: 60 },
       { menuId: 11, menuName: "โกโก้เย็น", quantity: 2, price: 35 },
     ],
     deliveryAddress: "มจธ. ตึกวิศวกรรมเครื่องกล",
-    distanceKm: 0.9,
-    pin: { lat: 13.8196, lng: 100.52268 },
     deliveryFee: 20,
     createdAt: minutesAgo(18),
   },
@@ -362,12 +408,9 @@ export const mockOrders = [
     orderId: 1017,
     customerId: 8,
     payerName: "พลอย รุ่งเรือง",
-    riderId: null,
-    status: "accepted",
+    status: "preparing",
     items: [{ menuId: 3, menuName: "ข้าวมันไก่", quantity: 1, price: 50 }],
     deliveryAddress: "บ้านเลขที่ 9 ซอยพุทธบูชา 36",
-    distanceKm: 1.2,
-    pin: { lat: 13.8176, lng: 100.52544 },
     deliveryFee: 20,
     createdAt: minutesAgo(12),
   },
@@ -375,8 +418,7 @@ export const mockOrders = [
     orderId: 1004,
     customerId: 4,
     payerName: "ภาณุ แก้วใส",
-    riderId: 1,
-    status: "preparing",
+    status: "ready",
     items: [
       {
         menuId: 5,
@@ -389,8 +431,6 @@ export const mockOrders = [
       { menuId: 12, menuName: "น้ำเปล่า", quantity: 2, price: 10 },
     ],
     deliveryAddress: "ซอยประชาอุทิศ 45 บ้านเลขที่ 88",
-    distanceKm: 1.8,
-    pin: { lat: 13.8216, lng: 100.53096 },
     deliveryFee: 20,
     createdAt: minutesAgo(35),
   },
@@ -398,15 +438,12 @@ export const mockOrders = [
     orderId: 1018,
     customerId: 6,
     payerName: "กวินทรา คงเจริญ",
-    riderId: null,
-    status: "preparing",
+    status: "ready",
     items: [
       { menuId: 7, menuName: "แกงเขียวหวานไก่", quantity: 1, price: 80 },
       { menuId: 9, menuName: "ไข่ตุ๋น", quantity: 1, price: 40 },
     ],
     deliveryAddress: "คอนโด Lumpini ตึก A ชั้น 12",
-    distanceKm: 2.3,
-    pin: { lat: 13.8196, lng: 100.53556 },
     deliveryFee: 20,
     createdAt: minutesAgo(28),
   },
@@ -414,12 +451,10 @@ export const mockOrders = [
     orderId: 1005,
     customerId: 1,
     payerName: "ณัฐธิดา มีสุข",
-    riderId: "shop",
     status: "delivering",
+    batchId: 1,
     items: [{ menuId: 2, menuName: "ข้าวผัดกุ้ง", quantity: 1, price: 70 }],
     deliveryAddress: "หอพักชวนชม ห้อง 305",
-    distanceKm: 0.6,
-    pin: { lat: 13.8176, lng: 100.51992 },
     deliveryFee: 20,
     createdAt: minutesAgo(50),
   },
@@ -427,8 +462,8 @@ export const mockOrders = [
     orderId: 1006,
     customerId: 5,
     payerName: "ฟ้าใส บุญมา",
-    riderId: 2,
     status: "completed",
+    batchId: 1,
     items: [
       {
         menuId: 1,
@@ -440,23 +475,19 @@ export const mockOrders = [
       { menuId: 9, menuName: "ไข่ตุ๋น", quantity: 1, price: 40 },
     ],
     deliveryAddress: "หมู่บ้านพฤกษา 12 ซอย 3",
-    distanceKm: 1.1,
-    pin: { lat: 13.8196, lng: 100.52452 },
     deliveryFee: 20,
-    createdAt: minutesAgo(95),
+    createdAt: minutesAgo(55),
   },
   {
     orderId: 1007,
     deliveryNote: "วางไว้หน้าประตูตามที่ลูกค้าแจ้ง",
-    proof: { lat: 13.8231, lng: 100.5381 },
+    proofTimeSource: "exif",
     customerId: 6,
     payerName: "กวินทรา คงเจริญ",
-    riderId: 1,
     status: "completed",
+    batchId: 2,
     items: [{ menuId: 8, menuName: "ปลานึ่งมะนาว", quantity: 1, price: 180 }],
     deliveryAddress: "คอนโด Lumpini ตึก A ชั้น 12",
-    distanceKm: 2.3,
-    pin: { lat: 13.8216, lng: 100.53556 },
     deliveryFee: 20,
     createdAt: minutesAgo(130),
   },
@@ -464,14 +495,11 @@ export const mockOrders = [
     orderId: 1008,
     customerId: 7,
     payerName: "สมชาย ใจดี",
-    riderId: null,
     status: "cancelled",
     cancelReason: "เมนูหมด",
     refundStatus: "pending",
     items: [{ menuId: 7, menuName: "แกงเขียวหวานไก่", quantity: 1, price: 80 }],
     deliveryAddress: "ตลาดบางมด ร้านลุงสมชาย",
-    distanceKm: 0.8,
-    pin: { lat: 13.8176, lng: 100.52176 },
     deliveryFee: 20,
     createdAt: minutesAgo(150),
   },
@@ -479,7 +507,6 @@ export const mockOrders = [
     orderId: 1009,
     customerId: 2,
     payerName: "ธนากร ศรีวงศ์",
-    riderId: 2,
     status: "completed",
     items: [
       { menuId: 6, menuName: "ต้มยำกุ้งน้ำข้น", quantity: 1, price: 120 },
@@ -492,8 +519,6 @@ export const mockOrders = [
       },
     ],
     deliveryAddress: "คอนโด The Base ตึก B ชั้น 8",
-    distanceKm: 1.4,
-    pin: { lat: 13.8196, lng: 100.52728 },
     deliveryFee: 20,
     createdAt: timeAt(1, 18, 20),
   },
@@ -501,15 +526,12 @@ export const mockOrders = [
     orderId: 1019,
     customerId: 5,
     payerName: "ฟ้าใส บุญมา",
-    riderId: null,
     status: "cancelled",
     cancelReason: "นอกพื้นที่จัดส่ง",
     refundStatus: "refunded",
     refundSlipUrl: "",
     items: [{ menuId: 11, menuName: "โกโก้เย็น", quantity: 2, price: 35 }],
     deliveryAddress: "หมู่บ้านพฤกษา 12 ซอย 3",
-    distanceKm: 1.1,
-    pin: { lat: 13.8216, lng: 100.52452 },
     deliveryFee: 20,
     createdAt: timeAt(1, 17, 40),
   },
@@ -517,7 +539,6 @@ export const mockOrders = [
     orderId: 1010,
     customerId: 1,
     payerName: "ณัฐธิดา มีสุข",
-    riderId: 1,
     status: "completed",
     items: [
       {
@@ -536,8 +557,6 @@ export const mockOrders = [
       },
     ],
     deliveryAddress: "หอพักชวนชม ห้อง 305",
-    distanceKm: 0.6,
-    pin: { lat: 13.8216, lng: 100.51992 },
     deliveryFee: 20,
     createdAt: timeAt(1, 12, 5),
   },
@@ -545,12 +564,9 @@ export const mockOrders = [
     orderId: 1011,
     customerId: 3,
     payerName: "แพรวา ทองดี",
-    riderId: 2,
     status: "completed",
     items: [{ menuId: 4, menuName: "ผัดซีอิ๊วหมู", quantity: 2, price: 60 }],
     deliveryAddress: "มจธ. ตึกวิศวกรรมเครื่องกล",
-    distanceKm: 0.9,
-    pin: { lat: 13.8176, lng: 100.52268 },
     deliveryFee: 20,
     createdAt: timeAt(2, 12, 30),
   },
@@ -558,15 +574,12 @@ export const mockOrders = [
     orderId: 1012,
     customerId: 8,
     payerName: "พลอย รุ่งเรือง",
-    riderId: 1,
     status: "completed",
     items: [
       { menuId: 2, menuName: "ข้าวผัดกุ้ง", quantity: 1, price: 70 },
       { menuId: 11, menuName: "โกโก้เย็น", quantity: 1, price: 35 },
     ],
     deliveryAddress: "บ้านเลขที่ 9 ซอยพุทธบูชา 36",
-    distanceKm: 1.2,
-    pin: { lat: 13.8196, lng: 100.52544 },
     deliveryFee: 20,
     createdAt: timeAt(3, 19, 0),
   },
@@ -574,7 +587,6 @@ export const mockOrders = [
     orderId: 1013,
     customerId: 1,
     payerName: "ณัฐธิดา มีสุข",
-    riderId: 2,
     status: "completed",
     items: [
       {
@@ -586,8 +598,6 @@ export const mockOrders = [
       },
     ],
     deliveryAddress: "หอพักชวนชม ห้อง 305",
-    distanceKm: 0.6,
-    pin: { lat: 13.8216, lng: 100.51992 },
     deliveryFee: 20,
     createdAt: timeAt(4, 12, 15),
   },
@@ -595,15 +605,12 @@ export const mockOrders = [
     orderId: 1014,
     customerId: 4,
     payerName: "ภาณุ แก้วใส",
-    riderId: 1,
     status: "completed",
     items: [
       { menuId: 6, menuName: "ต้มยำกุ้งน้ำข้น", quantity: 1, price: 120 },
       { menuId: 3, menuName: "ข้าวมันไก่", quantity: 2, price: 50 },
     ],
     deliveryAddress: "ซอยประชาอุทิศ 45 บ้านเลขที่ 88",
-    distanceKm: 1.8,
-    pin: { lat: 13.8176, lng: 100.53096 },
     deliveryFee: 20,
     createdAt: timeAt(5, 18, 45),
   },
@@ -611,12 +618,9 @@ export const mockOrders = [
     orderId: 1015,
     customerId: 2,
     payerName: "ธนากร ศรีวงศ์",
-    riderId: 2,
     status: "completed",
     items: [{ menuId: 8, menuName: "ปลานึ่งมะนาว", quantity: 1, price: 180 }],
     deliveryAddress: "คอนโด The Base ตึก B ชั้น 8",
-    distanceKm: 1.4,
-    pin: { lat: 13.8196, lng: 100.52728 },
     deliveryFee: 20,
     createdAt: timeAt(6, 19, 30),
   },
@@ -624,7 +628,6 @@ export const mockOrders = [
     orderId: 1016,
     customerId: 1,
     payerName: "ณัฐธิดา มีสุข",
-    riderId: 1,
     status: "completed",
     items: [
       {
@@ -637,8 +640,6 @@ export const mockOrders = [
       { menuId: 12, menuName: "น้ำเปล่า", quantity: 1, price: 10 },
     ],
     deliveryAddress: "หอพักชวนชม ห้อง 305",
-    distanceKm: 0.6,
-    pin: { lat: 13.8216, lng: 100.51992 },
     deliveryFee: 20,
     createdAt: timeAt(7, 12, 0),
   },
@@ -647,36 +648,88 @@ export const mockOrders = [
 const STEP_MINUTES = {
   paid: 0,
   accepted: 3,
-  preparing: 6,
+  ready: 20,
   delivering: 25,
   completed: 40,
   cancelled: 4,
 };
 
-const STEPS = ["paid", "accepted", "preparing", "delivering", "completed"];
+const STEPS = ["paid", "accepted", "ready", "delivering", "completed"];
+
+const STEP_COUNT = {
+  paid: 1,
+  preparing: 2,
+  ready: 3,
+  delivering: 4,
+  completed: 5,
+  cancelled: 1,
+};
 
 const getLogBy = (order, status) => {
-  if (status === "pending_payment") return "ลูกค้า";
   if (status === "paid") return "ระบบตรวจสลิป";
-  if (status === "cancelled" && order.cancelReason.includes("10 นาที")) {
+  if (status === "cancelled" && order.cancelReason.includes("15 นาที")) {
     return "ระบบ";
   }
-  const isDelivery = ["delivering", "completed"].includes(status);
-  if (isDelivery && order.riderId !== "shop") {
-    const rider = mockRiders.find((r) => r.riderId === order.riderId);
-    return `คนส่ง ${rider.riderName}`;
-  }
+  if (["delivering", "completed"].includes(status)) return "คนส่ง";
   return "ร้าน";
+};
+
+const getBatchCode = (at) => {
+  const day = new Date(at).toDateString();
+  let last = 0;
+  mockBatches.forEach((b) => {
+    const number = Number(b.batchCode.slice(2));
+    const isSameDay = new Date(b.createdAt).toDateString() === day;
+    if (isSameDay && number > last) last = number;
+  });
+  return `R-${String(last + 1).padStart(2, "0")}`;
+};
+
+const PROOF_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="#DCCBB3"/><rect x="300" y="210" width="200" height="220" rx="16" fill="#C4A57E"/><text x="400" y="500" font-size="32" text-anchor="middle" fill="#6B5B45" font-family="sans-serif">รูปถุงอาหารหน้าประตูห้อง</text></svg>`;
+const PROOF_PHOTO = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(PROOF_SVG)}`;
+
+const ADDRESS_INFO = {
+  "หอพักชวนชม ห้อง 305": ["หอพัก", "ฝากไว้ที่ป้อม รปภ."],
+  "คอนโด The Base ตึก B ชั้น 8": ["หอพัก", "โทรหาก่อนขึ้นตึก"],
+  "มจธ. ตึกวิศวกรรมเครื่องกล": ["ที่ทำงาน", "หน้าห้อง 302"],
+  "บ้านเลขที่ 9 ซอยพุทธบูชา 36": ["บ้าน", "ประตูรั้วสีเขียว"],
+  "ซอยประชาอุทิศ 45 บ้านเลขที่ 88": ["บ้าน", "ตรงข้ามร้านสะดวกซื้อ"],
+  "คอนโด Lumpini ตึก A ชั้น 12": ["หอพัก", "ฝากไว้ที่ล็อบบี้"],
+  "หมู่บ้านพฤกษา 12 ซอย 3": ["บ้าน", "บ้านหลังหัวมุม"],
+  "ตลาดบางมด ร้านลุงสมชาย": ["ที่ทำงาน", "แผงที่ 5"],
 };
 
 mockOrders.forEach((order) => {
   const start = new Date(order.createdAt).getTime();
-  const end =
-    order.status === "cancelled" ? 1 : STEPS.indexOf(order.status) + 1;
-  const steps = STEPS.slice(0, end);
+  const info = ADDRESS_INFO[order.deliveryAddress] || ["บ้าน", ""];
+  order.shopId = 1;
+  order.addressLabel = info[0];
+  order.addressNote = info[1];
+  if (order.status === "completed" && !order.batchId) {
+    const at = new Date(start + STEP_MINUTES.delivering * 60000);
+    mockBatches.push({
+      batchId: mockBatches.length + 1,
+      batchCode: getBatchCode(at),
+      token: `t${order.orderId}`,
+      orderIds: [order.orderId],
+      status: "completed",
+      createdAt: at.toISOString(),
+      scannedAt: at.toISOString(),
+      cancelledAt: null,
+    });
+    order.batchId = mockBatches.length;
+  }
+  const batch = mockBatches.find((b) => b.batchId === order.batchId);
+  const steps = STEPS.slice(0, STEP_COUNT[order.status]);
   if (order.status === "cancelled") steps.push("cancelled");
   const logs = steps.map((status) => {
-    const at = start + STEP_MINUTES[status] * 60000;
+    let at = start + STEP_MINUTES[status] * 60000;
+    if (batch && status === "delivering") {
+      at = new Date(batch.scannedAt).getTime();
+    }
+    if (batch && status === "completed") {
+      at = new Date(batch.scannedAt).getTime() + 15 * 60000;
+    }
     return {
       status,
       at: new Date(at).toISOString(),
@@ -690,12 +743,10 @@ mockOrders.forEach((order) => {
   });
   order.statusLogs = logs;
   order.transRef = `016${order.orderId}APP0${order.customerId}8842`;
-  if (order.riderId !== null) {
-    const at = start + STEP_MINUTES.preparing * 60000;
-    order.assignedAt = new Date(at).toISOString();
-  }
-  if (order.status === "completed" && !order.proof) {
-    order.proof = { lat: order.pin.lat, lng: order.pin.lng + 0.0002 };
+  if (order.status === "completed") {
+    order.proofTakenAt = logs[logs.length - 1].at;
+    order.proofTimeSource = order.proofTimeSource || "camera";
+    order.deliveryPhotoUrl = PROOF_PHOTO;
   }
 });
 
@@ -703,16 +754,8 @@ export const mockTagRequests = [];
 
 export const REGULAR_MIN_ORDERS = 3;
 
-export const SHOP_RIDER = "shop";
-
-export const isRiderJob = (order) => {
-  return order.riderId !== null && order.riderId !== SHOP_RIDER;
-};
-
-export const getRiderName = (riderId) => {
-  if (riderId === SHOP_RIDER) return "ร้านส่งเอง";
-  const rider = mockRiders.find((r) => r.riderId === riderId);
-  return rider ? rider.riderName : "";
+export const getBatch = (batchId) => {
+  return mockBatches.find((b) => b.batchId === batchId);
 };
 
 export const itemTotal = (item) => {
@@ -749,7 +792,10 @@ export const isRegularCustomer = (customerId) => {
   const from = Date.now() - 30 * 24 * 60 * 60000;
   const count = mockOrders.filter((o) => {
     const isRecent = new Date(o.createdAt).getTime() >= from;
-    return o.customerId === customerId && o.status !== "cancelled" && isRecent;
+    const isAccepted = !["paid", "cancelled", "pending_payment"].includes(
+      o.status,
+    );
+    return o.customerId === customerId && isAccepted && isRecent;
   }).length;
   return count >= REGULAR_MIN_ORDERS;
 };
@@ -760,12 +806,44 @@ export const addStatusLog = (order, status, by) => {
 };
 
 export const fetchSaveShop = (payload) => {
-  mockShop.isOpen = payload.isOpen;
+  if (payload.actionType === "open") {
+    mockShop.isOpen = payload.isOpen;
+  }
+  if (payload.actionType === "U") {
+    Object.assign(mockShop, payload.shop);
+    const account = mockAccounts.find(
+      (a) => a.accountId === mockShop.accountId,
+    );
+    account.accountName = mockShop.shopName;
+  }
+  if (payload.actionType === "add") {
+    const shops = mockAccounts.filter((a) => a.accountType === "shop");
+    const account = {
+      accountId: mockAccounts.length + 1,
+      accountType: "shop",
+      accountName: `ร้านที่ ${shops.length + 1}`,
+      newOrderCount: 0,
+      isOpen: false,
+    };
+    mockAccounts.splice(mockAccounts.length - 1, 0, account);
+    mockShop.accountId = account.accountId;
+    mockShop.shopName = account.accountName;
+    mockShop.isOpen = false;
+  }
+  if (payload.actionType === "switch") {
+    const account = mockAccounts.find((a) => a.accountId === payload.accountId);
+    mockShop.accountId = account.accountId;
+    mockShop.shopName = account.accountName;
+  }
   return { success: true };
 };
 
 export const fetchSaveOrder = (payload) => {
   const order = mockOrders.find((o) => o.orderId === payload.orderId);
+  if (payload.actionType === "accept") {
+    addStatusLog(order, "accepted", payload.by);
+    order.status = "preparing";
+  }
   if (payload.actionType === "status") {
     addStatusLog(order, payload.status, payload.by);
   }
@@ -777,15 +855,39 @@ export const fetchSaveOrder = (payload) => {
   if (payload.actionType === "refund") {
     order.refundStatus = "refunded";
     order.refundSlipUrl = payload.slipUrl;
+    order.refundAt = new Date().toISOString();
   }
-  if (payload.actionType === "delivered") {
-    addStatusLog(order, "completed", payload.by);
-    order.deliveryPhotoUrl = payload.photoUrl;
-    order.proof = payload.proof;
+  return { success: true };
+};
+
+export const fetchSaveBatch = (payload) => {
+  if (payload.actionType === "A") {
+    const now = new Date().toISOString();
+    const code = Math.random().toString(36).slice(2, 6);
+    const batch = {
+      batchId: mockBatches.length + 1,
+      batchCode: getBatchCode(now),
+      token: [code, ...payload.orderIds].join("-"),
+      orderIds: payload.orderIds,
+      status: "active",
+      createdAt: now,
+      scannedAt: null,
+      cancelledAt: null,
+    };
+    mockBatches.push(batch);
+    mockOrders.forEach((o) => {
+      if (payload.orderIds.includes(o.orderId)) o.batchId = batch.batchId;
+    });
+    return { success: true, batch: batch };
   }
-  if (payload.actionType === "rider") {
-    order.riderId = payload.riderId;
-    order.assignedAt = new Date().toISOString();
+  if (payload.actionType === "cancel") {
+    const batch = getBatch(payload.batchId);
+    if (batch.scannedAt) return { success: false };
+    batch.status = "cancelled";
+    batch.cancelledAt = new Date().toISOString();
+    mockOrders.forEach((o) => {
+      if (o.batchId === batch.batchId) o.batchId = null;
+    });
   }
   return { success: true };
 };
@@ -795,6 +897,9 @@ export const fetchSaveMenu = (payload) => {
   if (payload.actionType === "A") {
     const newId = Math.max(...mockMenus.map((m) => m.menuId), 0) + 1;
     mockMenus.push({ ...payload.menu, menuId: newId });
+    payload.tagRequests.forEach((request) => {
+      mockTagRequests.push({ ...request, menuId: newId });
+    });
   }
   if (payload.actionType === "U") {
     mockMenus[index] = { ...payload.menu, menuId: payload.menuId };
@@ -811,5 +916,546 @@ export const fetchSaveMenu = (payload) => {
 
 export const fetchSaveTagRequest = (payload) => {
   mockTagRequests.push(payload);
+  return { success: true };
+};
+
+export const SHOP_CHIPS = ["ทั้งหมด", "อาหารตามสั่ง", "ก๋วยเตี๋ยว", "ส้มตำ"];
+
+export const mockNearbyShops = [
+  {
+    shopId: 1,
+    shopName: "ครัวป้าแดง",
+    categoryName: "อาหารตามสั่ง",
+    chip: "อาหารตามสั่ง",
+    distance: 0.8,
+    color: "#FFE8DE",
+    iconColor: "#C78A00",
+  },
+  {
+    shopId: 2,
+    shopName: "ก๋วยเตี๋ยวเรือลุงหมาย",
+    categoryName: "ก๋วยเตี๋ยว",
+    chip: "ก๋วยเตี๋ยว",
+    distance: 1.2,
+    deliveryFee: 20,
+    minOrder: 50,
+    openTime: "09:00",
+    closeTime: "19:00",
+    isOpen: true,
+    phone: "082-345-6789",
+    color: "#FFF1D6",
+    iconColor: "#C78A00",
+  },
+  {
+    shopId: 3,
+    shopName: "ส้มตำแม่นวล",
+    categoryName: "อาหารอีสาน",
+    chip: "ส้มตำ",
+    distance: 1.9,
+    deliveryFee: 25,
+    minOrder: 80,
+    openTime: "10:00",
+    closeTime: "20:00",
+    isOpen: true,
+    phone: "083-456-7890",
+    color: "#FDE7E7",
+    iconColor: "#B42318",
+  },
+  {
+    shopId: 4,
+    shopName: "ชานมน้องฟ้า",
+    categoryName: "เครื่องดื่ม",
+    chip: "เครื่องดื่ม",
+    distance: 2.4,
+    deliveryFee: 30,
+    minOrder: 60,
+    openTime: "10:00",
+    closeTime: "21:00",
+    isOpen: false,
+    phone: "084-567-8901",
+    color: "#E6EEFF",
+    iconColor: "#1D4ED8",
+  },
+];
+
+export const mockOtherMenus = [
+  {
+    shopId: 2,
+    menuId: 101,
+    menuName: "เส้นเล็กน้ำตก",
+    categoryName: "เส้น",
+    price: 50,
+    description: "น้ำซุปเข้มข้น หมูตุ๋นนุ่ม",
+    tagIds: [4, 7, 11, 33],
+    optionGroups: [],
+    isAvailable: true,
+  },
+  {
+    shopId: 2,
+    menuId: 102,
+    menuName: "เกาเหลา",
+    categoryName: "เส้น",
+    price: 70,
+    description: "ไม่ใส่เส้น เครื่องแน่น",
+    tagIds: [4, 11, 33],
+    optionGroups: [],
+    isAvailable: true,
+  },
+  {
+    shopId: 2,
+    menuId: 103,
+    menuName: "ก๋วยเตี๋ยวเรือเนื้อ",
+    categoryName: "เส้น",
+    price: 60,
+    description: "เนื้อเปื่อย ลูกชิ้นเนื้อ",
+    tagIds: [4, 15, 33],
+    optionGroups: [],
+    isAvailable: true,
+  },
+  {
+    shopId: 2,
+    menuId: 104,
+    menuName: "ชาดำเย็น",
+    categoryName: "เครื่องดื่ม",
+    price: 25,
+    description: "",
+    tagIds: [3, 20, 39],
+    optionGroups: [],
+    isAvailable: true,
+  },
+  {
+    shopId: 3,
+    menuId: 201,
+    menuName: "ตำไทย",
+    categoryName: "ส้มตำ",
+    price: 50,
+    description: "ตำสด เปรี้ยวหวานกลมกล่อม",
+    tagIds: [1, 2, 3, 18, 37],
+    optionGroups: [],
+    isAvailable: true,
+  },
+  {
+    shopId: 3,
+    menuId: 202,
+    menuName: "ไก่ย่าง",
+    categoryName: "ของย่าง",
+    price: 80,
+    description: "ไก่ย่างเขาสวนกวาง ครึ่งตัว",
+    tagIds: [4, 12, 35],
+    optionGroups: [],
+    isAvailable: true,
+  },
+  {
+    shopId: 3,
+    menuId: 203,
+    menuName: "ข้าวเหนียว",
+    categoryName: "ข้าว",
+    price: 10,
+    description: "",
+    tagIds: [6, 34],
+    optionGroups: [],
+    isAvailable: true,
+  },
+  {
+    shopId: 4,
+    menuId: 301,
+    menuName: "ชานมไข่มุก",
+    categoryName: "เครื่องดื่ม",
+    price: 45,
+    description: "ไข่มุกเคี้ยวหนึบ หวานกำลังดี",
+    tagIds: [3, 5, 20, 21, 39],
+    optionGroups: [],
+    isAvailable: true,
+  },
+];
+
+export const mockMe = {
+  customerId: 1,
+  displayName: "มายด์ 🌷",
+  payerName: "ณัฐธิดา มีสุข",
+  isNew: false,
+  consentAt: timeAt(5, 9, 30),
+  isLocationOn: true,
+  refundPromptPay: "089-111-2233",
+  addressId: 1,
+  deletedAt: null,
+};
+
+export const mockAddresses = [
+  {
+    addressId: 1,
+    label: "หอพัก",
+    address: "หอพักชวนชม ห้อง 305",
+    note: "ฝากไว้ที่ป้อม รปภ.",
+    phone: "089-111-2233",
+    isMain: true,
+  },
+  {
+    addressId: 2,
+    label: "ที่ทำงาน",
+    address: "อาคารสาทรซิตี้ทาวเวอร์ ชั้น 12",
+    note: "",
+    phone: "089-111-2233",
+    isMain: false,
+  },
+];
+
+export const mockCart = {
+  shopId: null,
+  items: [],
+};
+
+export const mockMyOrders = [
+  {
+    orderId: 5310,
+    shopId: 2,
+    customerId: 1,
+    payerName: "ณัฐธิดา มีสุข",
+    status: "completed",
+    items: [
+      { menuId: 101, menuName: "เส้นเล็กน้ำตก", quantity: 2, price: 50 },
+      { menuId: 102, menuName: "เกาเหลา", quantity: 1, price: 70 },
+    ],
+    deliveryAddress: "หอพักชวนชม ห้อง 305",
+    addressLabel: "หอพัก",
+    addressNote: "ฝากไว้ที่ป้อม รปภ.",
+    deliveryFee: 20,
+    createdAt: timeAt(9, 18, 5),
+  },
+  {
+    orderId: 6127,
+    shopId: 3,
+    customerId: 1,
+    payerName: "ณัฐธิดา มีสุข",
+    status: "cancelled",
+    cancelReason: "วัตถุดิบหมด",
+    refundStatus: "pending",
+    items: [
+      { menuId: 201, menuName: "ตำไทย", quantity: 1, price: 50 },
+      { menuId: 202, menuName: "ไก่ย่าง", quantity: 1, price: 80 },
+      { menuId: 203, menuName: "ข้าวเหนียว", quantity: 2, price: 10 },
+    ],
+    deliveryAddress: "หอพักชวนชม ห้อง 305",
+    addressLabel: "หอพัก",
+    addressNote: "ฝากไว้ที่ป้อม รปภ.",
+    deliveryFee: 25,
+    createdAt: timeAt(10, 11, 47),
+  },
+];
+
+mockMyOrders.forEach((order) => {
+  const start = new Date(order.createdAt).getTime();
+  let steps = STEPS;
+  if (order.status === "cancelled") steps = ["paid", "cancelled"];
+  order.statusLogs = steps.map((status) => {
+    return {
+      status,
+      at: new Date(start + STEP_MINUTES[status] * 60000).toISOString(),
+      by: getLogBy(order, status),
+    };
+  });
+  order.transRef = `016${order.orderId}APP018842`;
+  if (order.status === "completed") {
+    order.proofTakenAt = order.statusLogs[4].at;
+    order.proofTimeSource = "camera";
+    order.deliveryPhotoUrl = PROOF_PHOTO;
+  }
+});
+
+export const ACTIVE_STATUS = ["paid", "preparing", "ready", "delivering"];
+
+export const getShop = (shopId) => {
+  const shop = mockNearbyShops.find((s) => s.shopId === shopId);
+  if (shopId !== 1) return shop;
+  const day = mockShop.openHours[(new Date().getDay() + 6) % 7];
+  return {
+    ...shop,
+    shopName: mockShop.shopName,
+    isOpen: mockShop.isOpen,
+    deliveryFee: mockShop.deliveryFee,
+    minOrder: mockShop.minOrder,
+    openTime: day.openTime,
+    closeTime: day.closeTime,
+    phone: mockShop.phone,
+    promptPayId: mockShop.promptPayId,
+  };
+};
+
+export const getShopMenus = (shopId) => {
+  if (shopId !== 1) {
+    return mockOtherMenus.filter((m) => m.shopId === shopId);
+  }
+  return mockMenus.map((m) => {
+    const category = mockCategories.find((c) => c.categoryId === m.categoryId);
+    return { ...m, shopId: 1, categoryName: category?.categoryName };
+  });
+};
+
+export const getMenu = (menuId) => {
+  const menu = mockOtherMenus.find((m) => m.menuId === menuId);
+  if (menu) return menu;
+  return getShopMenus(1).find((m) => m.menuId === menuId);
+};
+
+export const getMyOrders = () => {
+  const shopOrders = mockOrders.filter((o) => {
+    return o.customerId === mockMe.customerId;
+  });
+  const result = [...shopOrders, ...mockMyOrders].filter((o) => {
+    return !mockMe.deletedAt || o.createdAt > mockMe.deletedAt;
+  });
+  result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return result;
+};
+
+export const getOrder = (orderId) => {
+  const order = mockOrders.find((o) => o.orderId === orderId);
+  return order || mockMyOrders.find((o) => o.orderId === orderId);
+};
+
+export const getActiveOrder = () => {
+  return getMyOrders().find((o) => ACTIVE_STATUS.includes(o.status));
+};
+
+export const PAY_MINUTES = 15;
+
+export const getPaySecondsLeft = (order) => {
+  const deadline = new Date(order.createdAt).getTime() + PAY_MINUTES * 60000;
+  return Math.max(0, Math.round((deadline - Date.now()) / 1000));
+};
+
+export const getLog = (order, status) => {
+  return order.statusLogs.find((l) => l.status === status);
+};
+
+export const getRecommendMenus = (shopId) => {
+  const score = {};
+  getMyOrders().forEach((order) => {
+    order.items.forEach((item) => {
+      const menu = getMenu(item.menuId);
+      (menu?.tagIds || []).forEach((tagId) => {
+        score[tagId] = (score[tagId] || 0) + item.quantity;
+      });
+    });
+  });
+  const result = getShopMenus(shopId)
+    .filter((m) => m.isAvailable)
+    .map((m) => {
+      let total = 0;
+      m.tagIds.forEach((tagId) => {
+        total += score[tagId] || 0;
+      });
+      return { ...m, score: total };
+    })
+    .filter((m) => m.score > 0);
+  result.sort((a, b) => b.score - a.score);
+  return result.slice(0, 3);
+};
+
+export const cartTotal = () => {
+  let total = 0;
+  mockCart.items.forEach((item) => {
+    total += itemTotal(item);
+  });
+  return total;
+};
+
+export const cartCount = () => {
+  let count = 0;
+  mockCart.items.forEach((item) => {
+    count += item.quantity;
+  });
+  return count;
+};
+
+export const fetchSaveCart = (payload) => {
+  if (payload.actionType === "add") {
+    if (mockCart.shopId !== payload.shopId) mockCart.items = [];
+    mockCart.shopId = payload.shopId;
+    mockCart.items.push({ ...payload.item, key: Date.now() });
+  }
+  if (payload.actionType === "qty") {
+    const item = mockCart.items.find((i) => i.key === payload.key);
+    item.quantity = payload.quantity;
+    if (payload.quantity === 0) {
+      mockCart.items = mockCart.items.filter((i) => i.key !== payload.key);
+    }
+  }
+  if (payload.actionType === "reorder") {
+    mockCart.shopId = payload.order.shopId;
+    mockCart.items = payload.order.items.map((item, index) => {
+      return { ...item, key: Date.now() + index };
+    });
+  }
+  if (payload.actionType === "clear") {
+    mockCart.shopId = null;
+    mockCart.items = [];
+  }
+  return { success: true };
+};
+
+export const fetchSaveAddress = (payload) => {
+  if (payload.actionType === "A") {
+    const newId = Math.max(...mockAddresses.map((a) => a.addressId), 0) + 1;
+    mockAddresses.push({ ...payload.address, addressId: newId });
+    mockMe.addressId = newId;
+  }
+  if (payload.actionType === "U") {
+    const address = mockAddresses.find((a) => {
+      return a.addressId === payload.addressId;
+    });
+    Object.assign(address, payload.address);
+    mockMe.addressId = payload.addressId;
+  }
+  if (payload.actionType === "D") {
+    const index = mockAddresses.findIndex((a) => {
+      return a.addressId === payload.addressId;
+    });
+    mockAddresses.splice(index, 1);
+    if (mockMe.addressId === payload.addressId) {
+      mockMe.addressId = mockAddresses[0]?.addressId || null;
+    }
+  }
+  if (payload.actionType === "select") {
+    mockMe.addressId = payload.addressId;
+  }
+  if (payload.address?.isMain) {
+    mockAddresses.forEach((a) => {
+      a.isMain = a.addressId === mockMe.addressId;
+    });
+  }
+  return { success: true };
+};
+
+export const fetchSaveMe = (payload) => {
+  if (payload.actionType === "consent") {
+    mockMe.isNew = false;
+    mockMe.isLocationOn = payload.isLocationOn;
+    mockMe.consentAt = null;
+    if (payload.isLocationOn) mockMe.consentAt = new Date().toISOString();
+  }
+  if (payload.actionType === "location") {
+    mockMe.isLocationOn = payload.isLocationOn;
+    if (payload.isLocationOn) mockMe.consentAt = new Date().toISOString();
+  }
+  if (payload.actionType === "refund") {
+    mockMe.refundPromptPay = payload.refundPromptPay;
+  }
+  if (payload.actionType === "delete") {
+    if (getActiveOrder()) return { success: false };
+    mockMe.isNew = true;
+    mockMe.consentAt = null;
+    mockMe.isLocationOn = false;
+    mockMe.refundPromptPay = "";
+    mockMe.addressId = null;
+    mockMe.deletedAt = new Date().toISOString();
+    mockAddresses.splice(0, mockAddresses.length);
+    fetchSaveCart({ actionType: "clear" });
+  }
+  return { success: true };
+};
+
+export const fetchSaveMyOrder = (payload) => {
+  if (payload.actionType === "A") {
+    const shop = getShop(mockCart.shopId);
+    const address = mockAddresses.find((a) => {
+      return a.addressId === mockMe.addressId;
+    });
+    const allIds = [...mockOrders, ...mockMyOrders].map((o) => o.orderId);
+    const now = new Date().toISOString();
+    const order = {
+      orderId: Math.max(...allIds) + 1,
+      shopId: shop.shopId,
+      customerId: mockMe.customerId,
+      payerName: mockMe.payerName,
+      status: "pending_payment",
+      items: mockCart.items.map((item) => {
+        return {
+          menuId: item.menuId,
+          menuName: item.menuName,
+          quantity: item.quantity,
+          price: item.price,
+          options: item.options,
+          note: item.note,
+        };
+      }),
+      deliveryAddress: address.address,
+      addressLabel: address.label,
+      addressNote: address.note,
+      deliveryFee: shop.deliveryFee,
+      createdAt: now,
+      statusLogs: [{ status: "pending_payment", at: now, by: "ลูกค้า" }],
+    };
+    order.transRef = `016${order.orderId}APP018842`;
+    mockMyOrders.push(order);
+    mockMe.refundPromptPay = payload.refundPromptPay;
+    fetchSaveCart({ actionType: "clear" });
+    return { success: true, order: order };
+  }
+  const order = getOrder(payload.orderId);
+  if (payload.actionType === "slip") {
+    order.slipUrl = payload.slipUrl;
+  }
+  if (payload.actionType === "paid") {
+    addStatusLog(order, "paid", "ระบบตรวจสลิป");
+    if (order.shopId === 1) {
+      const index = mockMyOrders.findIndex((o) => o.orderId === order.orderId);
+      mockMyOrders.splice(index, 1);
+      mockOrders.push(order);
+    }
+  }
+  if (payload.actionType === "cancel") {
+    const isPaid = order.status !== "pending_payment";
+    addStatusLog(order, "cancelled", payload.by || "ลูกค้า");
+    order.cancelReason = payload.reason;
+    order.refundStatus = isPaid ? "pending" : "none";
+  }
+  return { success: true };
+};
+
+export const getBatchByToken = (token) => {
+  const batch = mockBatches.find((b) => b.token === token);
+  if (batch) return batch;
+  const orderIds = token.split("-").slice(1).map(Number);
+  const orders = mockOrders.filter((o) => orderIds.includes(o.orderId));
+  if (orderIds.length === 0 || orders.length !== orderIds.length) return;
+  const now = new Date().toISOString();
+  const newBatch = {
+    batchId: mockBatches.length + 1,
+    batchCode: getBatchCode(now),
+    token: token,
+    orderIds: orderIds,
+    status: "active",
+    createdAt: now,
+    scannedAt: null,
+    cancelledAt: null,
+  };
+  mockBatches.push(newBatch);
+  orders.forEach((o) => {
+    o.batchId = newBatch.batchId;
+  });
+  return newBatch;
+};
+
+export const fetchSaveDelivery = (payload) => {
+  const batch = getBatchByToken(payload.token);
+  const orders = mockOrders.filter((o) => batch.orderIds.includes(o.orderId));
+  if (payload.actionType === "scan") {
+    if (batch.scannedAt || batch.status !== "active") return { success: true };
+    batch.scannedAt = new Date().toISOString();
+    orders.forEach((o) => {
+      if (o.status === "ready") addStatusLog(o, "delivering", "คนส่ง");
+    });
+  }
+  if (payload.actionType === "deliver") {
+    const order = orders.find((o) => o.orderId === payload.orderId);
+    addStatusLog(order, "completed", "คนส่ง");
+    order.proofTakenAt = payload.takenAt;
+    order.proofTimeSource = payload.timeSource;
+    order.deliveryPhotoUrl = payload.photoUrl;
+    order.deliveryNote = payload.note;
+    const isAllDone = orders.every((o) => o.status === "completed");
+    if (isAllDone) batch.status = "completed";
+  }
   return { success: true };
 };

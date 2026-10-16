@@ -22,18 +22,18 @@
 src/
   app/         App.jsx, routes.jsx (รายการหน้าทั้งหมด), theme.js (สีของ Ant Design)
   pages/
-    shop/      หน้าร้านค้า: orders, menus, reports, customers
+    shop/      หน้าร้านค้า: login, orders, menus, reports, customers, settings
     customer/  หน้าลูกค้า (ยังเป็นหน้าเปล่า)
     rider/     หน้าคนส่ง (ยังเป็นหน้าเปล่า)
   components/  ของกลาง: Button, Card, StatusBadge, Form/, Use/
-  layouts/     ShopLayout (เมนูข้าง + แถบล่าง), PagePattern (หัวหน้า)
+  layouts/     ShopLayout (เมนูข้าง + แถบล่าง), PagePattern (หัวหน้า), ShopAccount (รายการบัญชี), LoginLayout (หน้าเข้าสู่ระบบ)
   hooks/       useNotify, useDropdown, useSearch
   mock/        mockData.js ข้อมูลตัวอย่าง และฟังก์ชัน fetchSave... แทน API
   services/    sound.js เสียงแจ้งเตือน, dropdown.js
-  utils/       format.js, geo.js, pagination.js
+  utils/       format.js, pagination.js
 ```
 
-แต่ละหน้าแบ่งไฟล์แบบ AquaDAT เช่น `menu.jsx` (หน้าหลัก ถือ state และบันทึก), `menuSearch.jsx`, `menuList.jsx`, `modalAddMenu.jsx`
+แต่ละหน้าแบ่งไฟล์แบบ AquaDAT เช่น `menu.jsx` (หน้าหลัก ถือ state และบันทึก), `menuSearch.jsx`, `menuList.jsx`, `menuForm.jsx`
 
 ตอนนี้ยังไม่ได้ต่อ backend ทุกหน้าใช้ข้อมูลใน `mock/mockData.js` ตอนต่อ API จริงให้เปลี่ยนฟังก์ชัน `fetchSave...` ในไฟล์นั้น
 

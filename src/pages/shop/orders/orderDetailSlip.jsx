@@ -1,8 +1,4 @@
-import {
-  CheckOutlined,
-  CloseOutlined,
-  ExclamationCircleOutlined,
-} from "@ant-design/icons";
+import { CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { Card } from "@/components";
 import { paidTotal } from "@/mock/mockData";
 import { formatPrice, formatTime } from "@/utils/format";
@@ -18,7 +14,7 @@ const OrderDetailSlip = ({ order }) => {
 
   return (
     <Card title="สลิปโอนเงิน">
-      <div className="flex h-56 items-center justify-center rounded-xl border border-solid border-line bg-[#F3F2EE] text-ink-3">
+      <div className="flex h-[220px] items-center justify-center rounded-xl bg-[#F3F2EF] text-sm text-ink-2">
         รูปสลิป
       </div>
       {isInvalid && (
@@ -34,16 +30,12 @@ const OrderDetailSlip = ({ order }) => {
         </div>
       )}
       {!isManualSlip && !isInvalid && (
-        <div className="flex flex-col gap-1 text-[#15803D]">
+        <div className="flex flex-col gap-1 text-sm text-[#0E6E5C]">
           {checks.map((text) => (
-            <span key={text}>
-              <CheckOutlined className="mr-2" />
-              {text}
-            </span>
+            <span key={text}>✓ {text}</span>
           ))}
         </div>
       )}
-      <div className="text-sm text-ink-2">เลขอ้างอิง {order.transRef}</div>
       {!isManualSlip && (
         <div className="text-sm text-ink-2">
           ตรวจโดย RDCW Slip API · {formatTime(order.createdAt)} น.

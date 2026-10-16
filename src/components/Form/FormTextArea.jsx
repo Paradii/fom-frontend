@@ -17,7 +17,7 @@ const FormTextArea = ({ control, name, label, required, hint, ...props }) => {
           <Input.TextArea
             {...field}
             value={field.value || ""}
-            rows={3}
+            rows={2}
             status={fieldState.error ? "error" : ""}
             {...props}
           />

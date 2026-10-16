@@ -1,5 +1,4 @@
 import { Button } from "antd";
-import { CheckCircleFilled } from "@ant-design/icons";
 import { Card } from "@/components";
 import { mockCustomers, paidTotal } from "@/mock/mockData";
 import { formatPrice } from "@/utils/format";
@@ -23,22 +22,26 @@ const OrderDetailRefund = ({ order, onRefund }) => {
 
   return (
     <Card title="โอนเงินคืนลูกค้า">
-      <div className="flex justify-between">
+      <div className="flex justify-between text-[15px]">
         <span className="text-ink-2">พร้อมเพย์</span>
         <b>{customer?.phone}</b>
       </div>
-      <div className="flex justify-between">
+      <div className="flex justify-between text-[15px]">
         <span className="text-ink-2">ชื่อบัญชีผู้รับ</span>
         <b>{order.payerName}</b>
       </div>
-      <div className="flex justify-between text-lg">
+      <div className="flex items-center justify-between text-lg">
         <span>{isPending ? "ต้องโอนคืน" : "โอนคืนแล้ว"}</span>
-        <b className={isPending ? "text-danger" : "text-[#15803D]"}>
+        <b
+          className={`font-head text-xl ${
+            isPending ? "text-[#D92D20]" : "text-[#0E6E5C]"
+          }`}
+        >
           {formatPrice(paidTotal(order))}
         </b>
       </div>
       {isPending ? (
-        <Button danger type="primary" block onClick={onRefund}>
+        <Button block className="refund-button" onClick={onRefund}>
           แนบสลิปโอนคืน
         </Button>
       ) : (
@@ -47,16 +50,15 @@ const OrderDetailRefund = ({ order, onRefund }) => {
             <img
               src={order.refundSlipUrl}
               alt=""
-              className="h-56 w-full rounded-xl object-cover"
+              className="h-[220px] w-full rounded-xl object-cover"
             />
           ) : (
-            <div className="flex h-56 items-center justify-center rounded-xl border border-solid border-line bg-[#F3F2EE] text-ink-3">
+            <div className="flex h-[220px] items-center justify-center rounded-xl bg-[#F3F2EF] text-sm text-ink-2">
               รูปสลิปโอนคืน
             </div>
           )}
-          <span className="text-[#15803D]">
-            <CheckCircleFilled className="mr-2" />
-            ตรวจสลิปโอนคืนผ่าน แจ้งลูกค้าแล้ว
+          <span className="text-sm text-[#0E6E5C]">
+            ✓ ตรวจสลิปโอนคืนผ่าน แจ้งลูกค้าแล้ว
           </span>
         </div>
       )}

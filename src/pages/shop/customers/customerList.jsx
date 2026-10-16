@@ -37,9 +37,7 @@ const CustomerList = ({
               ประจำ
             </Tag>
           )}
-          <div className="text-sm text-ink-2">
-            {record.address} · {record.distanceKm} กม.
-          </div>
+          <div className="text-sm text-ink-2">{record.address}</div>
         </div>
       </div>
     );
@@ -60,20 +58,20 @@ const CustomerList = ({
       title: "สั่งทั้งหมด",
       dataIndex: "orderCount",
       key: "orderCount",
-      align: "center",
+      align: "left",
       width: 100,
       render: (_, record) => {
-        return `${record.orderCount} ครั้ง`;
+        return <b>{record.orderCount} ครั้ง</b>;
       },
     },
     {
       title: "ยอดรวม",
       dataIndex: "totalSpent",
       key: "totalSpent",
-      align: "right",
+      align: "left",
       width: 100,
       render: (_, record) => {
-        return <b>{formatPrice(record.totalSpent)}</b>;
+        return formatPrice(record.totalSpent);
       },
     },
     {
@@ -98,16 +96,6 @@ const CustomerList = ({
       width: 150,
       render: (_, record) => {
         return <span className="text-ink-2">{record.favoriteMenus[0]}</span>;
-      },
-    },
-    {
-      title: "ติดต่อ",
-      dataIndex: "phone",
-      key: "phone",
-      align: "left",
-      width: 130,
-      render: (_, record) => {
-        return <b className="whitespace-nowrap">{record.phone}</b>;
       },
     },
   ];
@@ -145,7 +133,6 @@ const CustomerList = ({
               </span>
               <span className="text-ink-2">{record.favoriteMenus[0]}</span>
             </div>
-            <b className="text-right">{record.phone}</b>
           </div>
         ))}
         <UsePagination pagination={gridCriteria} onChange={setGridCriteria} />

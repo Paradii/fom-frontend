@@ -3,34 +3,33 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "antd";
 import PagePattern from "@/layouts/PagePattern";
 import useNotify from "@/hooks/useNotify";
-import { STATUS, StatusBadge } from "@/components";
-import {
-  SHOP_RIDER,
-  fetchSaveOrder,
-  isRiderJob,
-  mockOrders,
-} from "@/mock/mockData";
+import { StatusBadge } from "@/components";
+import { fetchSaveOrder, mockOrders } from "@/mock/mockData";
 import { formatTime } from "@/utils/format";
-import { getPosition } from "@/utils/geo";
 import OrderDetailItems from "./orderDetailItems";
 import OrderDetailCustomer from "./orderDetailCustomer";
 import OrderDetailHistory from "./orderDetailHistory";
 import OrderDetailSlip from "./orderDetailSlip";
-import OrderDetailRider from "./orderDetailRider";
 import OrderDetailRefund from "./orderDetailRefund";
 import ModalReject from "./modalReject";
 import ModalRefund from "./modalRefund";
-import ModalDelivered from "./modalDelivered";
 import OrderDetailProof from "./orderDetailProof";
 
-const NEXT_STATUS = {
-  paid: "accepted",
-  accepted: "preparing",
-  preparing: "delivering",
-  delivering: "completed",
+const NEXT_STEP = {
+  paid: {
+    actionType: "accept",
+    text: "รับคำสั่งซื้อ",
+    message: "รับคำสั่งซื้อแล้ว เริ่มทำได้เลย",
+  },
+  preparing: {
+    actionType: "status",
+    status: "ready",
+    text: "ทำเสร็จ · พร้อมส่ง",
+    message: "เปลี่ยนเป็นพร้อมส่งแล้ว",
+  },
 };
 
-const CANCEL_STATUS = ["paid", "accepted", "preparing"];
+const CANCEL_STATUS = ["paid", "preparing", "ready"];
 
 const OrderDetail = () => {
   const { orderId } = useParams();
@@ -42,10 +41,6 @@ const OrderDetail = () => {
     data: null,
   });
   const [refundModal, setRefundModal] = useState({
-    open: false,
-    data: null,
-  });
-  const [deliveredModal, setDeliveredModal] = useState({
     open: false,
     data: null,
   });
@@ -71,9 +66,6 @@ const OrderDetail = () => {
       reason: formValue.reason,
       isRefund: formValue.isRefund,
       slipUrl: formValue.slipUrl,
-      photoUrl: formValue.photoUrl,
-      proof: formValue.proof,
-      riderId: formValue.riderId,
       by: "ร้าน",
     };
     const resp = fetchSaveOrder(payload);
@@ -82,26 +74,12 @@ const OrderDetail = () => {
     }
   };
 
-  const onChangeStatus = (status) => {
-    if (status === "completed") {
-      setDeliveredModal({ open: true, data: order });
-      return;
-    }
+  const onNextStep = (next) => {
     onSubmitForm({
-      formValue: { status: status },
-      actionType: "status",
+      formValue: { status: next.status },
+      actionType: next.actionType,
     });
-    success(`เปลี่ยนเป็น ${STATUS[status].label} แล้ว`);
-  };
-
-  const onSaveDelivered = (data, photo) => {
-    getPosition((position) => {
-      onSubmitForm({
-        formValue: { photoUrl: photo.url, proof: position },
-        actionType: "delivered",
-      });
-      success("บันทึกส่งสำเร็จพร้อมรูปหลักฐานแล้ว");
-    });
+    success(next.message);
   };
 
   const onSaveReject = (data, reason, isRefund) => {
@@ -120,18 +98,6 @@ const OrderDetail = () => {
     success("บันทึกการโอนคืนแล้ว แจ้งลูกค้าทาง LINE แล้ว");
   };
 
-  const onChangeRider = (riderId) => {
-    onSubmitForm({
-      formValue: { riderId: riderId },
-      actionType: "rider",
-    });
-    if (riderId === SHOP_RIDER) {
-      success("ตั้งเป็นร้านส่งเองแล้ว");
-    } else {
-      success("มอบหมายพนักงานจัดส่งแล้ว");
-    }
-  };
-
   if (!order) {
     return (
       <PagePattern
@@ -141,11 +107,8 @@ const OrderDetail = () => {
     );
   }
 
-  const next = NEXT_STATUS[order.status];
-  const isDeliveryStep = ["delivering", "completed"].includes(next);
-  const noRider = next === "delivering" && order.riderId === null;
-  const waitRider = isDeliveryStep && isRiderJob(order);
-  const canCancel = CANCEL_STATUS.includes(order.status);
+  const next = NEXT_STEP[order.status];
+  const canCancel = CANCEL_STATUS.includes(order.status) && !order.batchId;
   const isCancelled = order.status === "cancelled";
   const isCompleted = order.status === "completed";
   const acceptedLog = order.statusLogs.find((l) => l.status === "accepted");
@@ -153,39 +116,38 @@ const OrderDetail = () => {
     return l.status === "completed";
   });
 
+  let timeText = `สั่งเมื่อ ${formatTime(order.createdAt)}`;
+  if (acceptedLog && !completedLog) {
+    timeText += ` · รับ ${formatTime(acceptedLog.at)}`;
+  }
+  if (completedLog) timeText += ` · ส่งถึง ${formatTime(completedLog.at)}`;
+
   return (
     <PagePattern
       title={`คำสั่งซื้อ #${order.orderId}`}
       titleExtra={
         <>
-          <StatusBadge status={order.status} />
-          <span className="text-ink-2">
-            สั่งเมื่อ {formatTime(order.createdAt)}
-            {acceptedLog &&
-              !completedLog &&
-              ` · รับ ${formatTime(acceptedLog.at)}`}
-            {completedLog && ` · ส่งถึง ${formatTime(completedLog.at)}`}
+          <StatusBadge status={order.status} size="large" />
+          <span className="hidden text-sm text-ink-2 md:inline">
+            {timeText}
           </span>
         </>
       }
+      subtitle={<span className="text-sm md:hidden">{timeText}</span>}
       onBack={() => navigate("/shop/orders")}
       extra={
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col items-start gap-2 md:flex-row">
           {canCancel && (
             <Button
-              danger
+              className="danger-outline"
               onClick={() => setModal({ open: true, data: order })}
             >
               ยกเลิกคำสั่งซื้อ
             </Button>
           )}
-          {next && !waitRider && (
-            <Button
-              type="primary"
-              disabled={noRider}
-              onClick={() => onChangeStatus(next)}
-            >
-              {noRider ? "เลือกคนส่งก่อน" : `เปลี่ยนเป็น ${STATUS[next].label}`}
+          {next && (
+            <Button type="primary" onClick={() => onNextStep(next)}>
+              {next.text}
             </Button>
           )}
         </div>
@@ -206,9 +168,6 @@ const OrderDetail = () => {
           )}
           <OrderDetailSlip order={order} />
           {isCompleted && <OrderDetailProof order={order} />}
-          {!isCancelled && !isCompleted && (
-            <OrderDetailRider order={order} onChangeRider={onChangeRider} />
-          )}
         </div>
       </div>
 
@@ -217,11 +176,6 @@ const OrderDetail = () => {
         modal={refundModal}
         setModal={setRefundModal}
         onSave={onSaveRefund}
-      />
-      <ModalDelivered
-        modal={deliveredModal}
-        setModal={setDeliveredModal}
-        onSave={onSaveDelivered}
       />
     </PagePattern>
   );

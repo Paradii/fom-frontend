@@ -1,44 +1,42 @@
 import { useState } from "react";
 import { Button } from "antd";
-import { DownOutlined, UpOutlined } from "@ant-design/icons";
+import { DownOutlined, ShoppingOutlined, UpOutlined } from "@ant-design/icons";
 import { StatusBadge } from "@/components";
-import OrderCard from "./orderCard";
 
-const OrderGroup = ({ status, orders, onChangeStatus, onView }) => {
+const OrderGroup = ({ status, count, extra, children }) => {
   const [isOpen, setIsOpen] = useState(status !== "completed");
 
   return (
-    <div className="flex flex-col gap-3 rounded-card bg-[#F3F2EE] p-3">
+    <div className="flex flex-col gap-2.5 rounded-card bg-[#F5F4F1] p-3">
       <div
-        className="flex cursor-pointer items-center gap-1.5 pl-1"
+        className="flex cursor-pointer items-center gap-2 px-1 py-0.5"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <StatusBadge status={status} />
-        <span className="ml-auto whitespace-nowrap text-ink-2">
-          {orders.length} รายการ
+        <StatusBadge
+          status={status}
+          icon={status === "ready" && <ShoppingOutlined />}
+        />
+        <span className="whitespace-nowrap text-sm text-ink-2">
+          {count} รายการ
         </span>
+        <div className="ml-auto" />
+        {isOpen && extra}
         <Button
           size="small"
-          className="h-9 w-9 shrink-0"
+          className="h-[30px] w-[30px] shrink-0 rounded-lg"
           icon={isOpen ? <UpOutlined /> : <DownOutlined />}
         />
       </div>
-      {isOpen &&
-        orders.map((o) => (
-          <OrderCard
-            key={o.orderId}
-            order={o}
-            onChangeStatus={onChangeStatus}
-            onView={onView}
-          />
-        ))}
+      {isOpen && children}
       {!isOpen && (
-        <div className="pl-1 text-sm text-ink-2">
+        <div className="pl-1 text-[13px] text-ink-3">
           พับไว้ · แตะหัวข้อเพื่อดูรายการ
         </div>
       )}
-      {isOpen && orders.length === 0 && (
-        <div className="py-6 text-center text-ink-2">ยังไม่มีคำสั่งซื้อ</div>
+      {isOpen && count === 0 && (
+        <div className="py-6 text-center text-sm text-ink-2">
+          ยังไม่มีคำสั่งซื้อ
+        </div>
       )}
     </div>
   );

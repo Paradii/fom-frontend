@@ -64,7 +64,7 @@ const MenuList = ({
 
   const onCellButton = (values) => {
     return (
-      <div className="flex justify-center">
+      <div className="flex">
         <Button
           type="text"
           className="font-semibold"
@@ -105,7 +105,7 @@ const MenuList = ({
       title: "ราคา",
       dataIndex: "price",
       key: "price",
-      align: "right",
+      align: "left",
       width: 90,
       render: (_, record) => {
         return <b>{formatPrice(record.price)}</b>;
@@ -132,10 +132,10 @@ const MenuList = ({
       },
     },
     {
-      title: "จัดการ",
+      title: "",
       dataIndex: "",
       key: "action",
-      align: "center",
+      align: "left",
       width: 140,
       render: (_, record) => {
         return onCellButton(record);
@@ -156,25 +156,25 @@ const MenuList = ({
         />
       </div>
       <div className="xl:hidden">
-        {dataTable.map((record) => (
-          <div
-            key={record.menuId}
-            className="flex flex-col gap-2 border-0 border-b border-solid border-line p-4 last:border-b-0"
-          >
-            {menuCell(record)}
-            <div className="flex flex-wrap gap-x-3 gap-y-1">
-              <span className="text-ink-2">
-                {getCategoryName(record.categoryId)}
-              </span>
-              <b>{formatPrice(record.price)}</b>
-              <span className="text-ink-2">{getTagText(record.tagIds)}</span>
+        <div className="grid md:grid-cols-2">
+          {dataTable.map((record) => (
+            <div
+              key={record.menuId}
+              className="flex flex-col gap-2 border-0 border-b border-solid border-line p-4 md:odd:border-r"
+            >
+              {menuCell(record)}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                <span className="text-ink-2">
+                  {getCategoryName(record.categoryId)}
+                </span>
+                <b>{formatPrice(record.price)}</b>
+                <span className="text-ink-2">{getTagText(record.tagIds)}</span>
+                {switchCell(record)}
+                <div className="ml-auto">{onCellButton(record)}</div>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              {switchCell(record)}
-              {onCellButton(record)}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
         <UsePagination pagination={gridCriteria} onChange={setGridCriteria} />
       </div>
     </Card>

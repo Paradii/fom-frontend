@@ -7,13 +7,14 @@ const FormGroup = ({
   htmlFor,
   children,
   className = "",
+  labelClassName = "text-base font-medium text-ink",
 }) => {
   return (
     <div className={`grid content-start gap-1.5 ${className}`}>
       {label && (
-        <label htmlFor={htmlFor} className="text-base font-medium text-ink">
+        <label htmlFor={htmlFor} className={labelClassName}>
           {label}
-          {required && <span className="text-danger"> *</span>}
+          {required && <span> *</span>}
           {labelNote && (
             <span className="font-normal text-ink-3"> {labelNote}</span>
           )}

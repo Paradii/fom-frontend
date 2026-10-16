@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate, useParams } from "react-router-dom";
-import { PictureOutlined, UploadOutlined } from "@ant-design/icons";
+import { Button, Checkbox } from "antd";
+import {
+  PictureOutlined,
+  PlusOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import PagePattern from "@/layouts/PagePattern";
 import useNotify from "@/hooks/useNotify";
 import {
@@ -14,8 +19,6 @@ import {
   FormTextArea,
   ButtonAdd,
   ButtonCancel,
-  ButtonDelete,
-  ButtonEdit,
   ButtonSave,
 } from "@/components";
 import {
@@ -25,7 +28,7 @@ import {
   mockTagRequests,
   mockTags,
 } from "@/mock/mockData";
-import { formatPrice } from "@/utils/format";
+import { formatPrice, onlyDigits } from "@/utils/format";
 import ModalAddOption from "./modalAddOption";
 import ModalRequestTag, { TYPE_OPTIONS } from "./modalRequestTag";
 import { menuDefaultValues, menuSchema } from "./menuSchema";
@@ -98,11 +101,6 @@ const ImageCard = ({ control, onInvalid }) => {
 };
 
 const PreviewCard = ({ formValue }) => {
-  const tasteNames = mockTags
-    .filter((t) => (formValue.tasteIds || []).includes(t.tagId))
-    .map((t) => t.tagName)
-    .join(" · ");
-
   return (
     <Card title="ตัวอย่างที่ลูกค้าเห็น">
       <div className="flex gap-3 rounded-xl border border-solid border-line p-3">
@@ -122,9 +120,6 @@ const PreviewCard = ({ formValue }) => {
           <div className="truncate text-sm text-ink-2">
             {formValue.description || "คำบรรยายเมนู"}
           </div>
-          {tasteNames && (
-            <div className="text-sm text-danger">{tasteNames}</div>
-          )}
           <b className="text-brand-text">{formatPrice(formValue.price)}</b>
         </div>
       </div>
@@ -132,7 +127,28 @@ const PreviewCard = ({ formValue }) => {
   );
 };
 
-const ModalAddMenu = () => {
+const TAG_FIELDS = [
+  {
+    name: "tasteIds",
+    label: "รสชาติ",
+    placeholder: "เผ็ด, เค็ม",
+    dataType: "tagTaste",
+  },
+  {
+    name: "ingredientIds",
+    label: "วัตถุดิบหลัก",
+    placeholder: "หมู, ไข่",
+    dataType: "tagIngredient",
+  },
+  {
+    name: "cookingIds",
+    label: "วิธีปรุง",
+    placeholder: "ผัด",
+    dataType: "tagCooking",
+  },
+];
+
+const MenuForm = () => {
   const { menuId } = useParams();
   const navigate = useNavigate();
   const actionCode = menuId === "new" ? "A" : "U";
@@ -208,6 +224,7 @@ const ModalAddMenu = () => {
       actionType: actionCode,
       menuId: Number(menuId),
       menu: payload,
+      tagRequests: actionCode === "A" ? tagRequests : [],
     });
     if (resp.success) {
       success("บันทึกเมนูเรียบร้อย");
@@ -249,12 +266,54 @@ const ModalAddMenu = () => {
   };
 
   const onSaveTagRequest = (formValue) => {
-    const request = { ...formValue, menuId: Number(menuId) || null };
+    if (actionCode === "A") {
+      setTagRequests([...tagRequests, formValue]);
+      success("เพิ่มคำขอแท็กแล้ว จะส่งให้ผู้ดูแลระบบตอนบันทึกเมนู");
+      return;
+    }
+    const request = { ...formValue, menuId: Number(menuId) };
     const resp = fetchSaveTagRequest(request);
     if (resp.success) {
       setTagRequests([...tagRequests, request]);
       success("ส่งคำขอแท็กใหม่แล้ว รอผู้ดูแลระบบตรวจ");
     }
+  };
+
+  const renderTag = (item) => {
+    return (
+      <span className="mr-1.5 rounded-md bg-brand-soft px-2.5 py-0.5 text-sm font-semibold text-brand-text">
+        {item.label}
+      </span>
+    );
+  };
+
+  const renderOption = (option, name) => {
+    const values = formValue[name] || [];
+    return (
+      <div className="flex items-center gap-2.5">
+        <Checkbox checked={values.includes(option.value)} />
+        {option.label}
+      </div>
+    );
+  };
+
+  const renderTagMenu = (menu) => {
+    return (
+      <>
+        {menu}
+        <div className="mt-1 border-0 border-t border-solid border-line pt-1">
+          <Button
+            type="link"
+            icon={<PlusOutlined />}
+            className="h-auto whitespace-normal px-3 text-left font-semibold"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setIsTagModalOpen(true)}
+          >
+            ไม่มีในรายการ? ขอเพิ่มแท็กใหม่
+          </Button>
+        </div>
+      </>
+    );
   };
 
   const getTypeLabel = (tagType) => {
@@ -284,6 +343,9 @@ const ModalAddMenu = () => {
                 placeholder="55"
                 required
                 min={0}
+                precision={0}
+                formatter={onlyDigits}
+                parser={onlyDigits}
               />
               <FormDropdown
                 control={control}
@@ -292,7 +354,6 @@ const ModalAddMenu = () => {
                 placeholder="ข้าว"
                 required
                 dataType="menuCategory"
-                hint="ร้านตั้งชื่อเองได้ ใช้จัดหน้าร้านเท่านั้น ไม่ใช้เทรน AI"
               />
             </div>
             <FormTextArea
@@ -308,52 +369,39 @@ const ModalAddMenu = () => {
             title="คุณลักษณะสำหรับระบบแนะนำเมนู"
             subtitle="เลือกให้ตรงกับเมนู ระบบจะใช้แนะนำเมนูให้ลูกค้าที่ชอบแนวเดียวกัน"
           >
-            <div className="grid gap-3 lg:grid-cols-3">
-              <FormDropdown
-                control={control}
-                name="tasteIds"
-                label="รสชาติ"
-                placeholder="เผ็ด, เค็ม"
-                labelNote="เลือกได้หลายอย่าง"
-                required
-                dataType="tagTaste"
-                mode="multiple"
-              />
-              <FormDropdown
-                control={control}
-                name="ingredientIds"
-                label="วัตถุดิบหลัก"
-                placeholder="หมู, ไข่"
-                labelNote="เลือกได้หลายอย่าง"
-                required
-                dataType="tagIngredient"
-                mode="multiple"
-              />
-              <FormDropdown
-                control={control}
-                name="cookingIds"
-                label="วิธีปรุง"
-                placeholder="ผัด"
-                labelNote="เลือกได้หลายอย่าง"
-                required
-                dataType="tagCooking"
-                mode="multiple"
-              />
+            <div className="grid gap-3 xl:grid-cols-3">
+              {TAG_FIELDS.map((tag) => (
+                <FormDropdown
+                  key={tag.name}
+                  control={control}
+                  name={tag.name}
+                  label={tag.label}
+                  placeholder={tag.placeholder}
+                  labelNote="เลือกได้หลายอย่าง"
+                  required
+                  dataType={tag.dataType}
+                  mode="multiple"
+                  allowClear={false}
+                  className="tag-select"
+                  popupClassName="tag-popup"
+                  menuItemSelectedIcon={null}
+                  listHeight={420}
+                  tagRender={(item) => renderTag(item)}
+                  optionRender={(option) => renderOption(option, tag.name)}
+                  dropdownRender={(menu) => renderTagMenu(menu)}
+                />
+              ))}
             </div>
-            <ButtonAdd
-              type="link"
-              text="ไม่มีแท็กที่ต้องการ? ขอเพิ่มแท็กใหม่"
-              className="self-start px-0"
-              onClick={() => setIsTagModalOpen(true)}
-            />
             {tagRequests.map((request) => (
               <div
                 key={`${request.tagType}-${request.tagName}`}
                 className="rounded-xl border border-solid border-[#F5DFA0] bg-brand-soft p-3 text-sm text-brand-text"
               >
                 <b>คำขอแท็กใหม่</b> "{request.tagName}" (
-                {getTypeLabel(request.tagType)}) · รอผู้ดูแลระบบตรวจ
-                ระหว่างนี้เมนูยังใช้แท็กที่เลือกไว้ตามปกติ
+                {getTypeLabel(request.tagType)}) ·{" "}
+                {actionCode === "A"
+                  ? "จะส่งให้ผู้ดูแลระบบตอนบันทึกเมนู"
+                  : "รอผู้ดูแลระบบตรวจ ระหว่างนี้เมนูยังใช้แท็กที่เลือกไว้ตามปกติ"}
               </div>
             ))}
           </Card>
@@ -363,7 +411,10 @@ const ModalAddMenu = () => {
             extra={
               <ButtonAdd
                 type="default"
-                text="เพิ่มกลุ่ม"
+                size="small"
+                text="+ เพิ่มกลุ่ม"
+                icon={null}
+                className="add-group"
                 onClick={() =>
                   setModal({
                     open: true,
@@ -379,30 +430,26 @@ const ModalAddMenu = () => {
               <p className="m-0 text-sm text-ink-3">ยังไม่มีกลุ่มตัวเลือก</p>
             )}
             {optionGroups.map((group, index) => (
-              <div
+              <button
                 key={index}
-                className="flex flex-col gap-2 rounded-xl bg-[#F7F6F3] p-3"
+                type="button"
+                onClick={() =>
+                  setModal({
+                    open: true,
+                    data: group,
+                    index: index,
+                    actionCode: "U",
+                  })
+                }
+                className="flex cursor-pointer flex-col gap-2 rounded-xl border border-solid border-line bg-[#F7F6F3] p-3 text-left font-body text-base text-ink hover:border-brand"
               >
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex w-full items-center justify-between gap-2">
                   <b>{group.groupName}</b>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-ink-2">
-                      {group.isRequired
-                        ? `ต้องเลือก · สูงสุด ${group.maxSelect}`
-                        : "ไม่บังคับ"}
-                    </span>
-                    <ButtonEdit
-                      size="small"
-                      onClick={() =>
-                        setModal({
-                          open: true,
-                          data: group,
-                          index: index,
-                          actionCode: "U",
-                        })
-                      }
-                    />
-                  </div>
+                  <span className="text-sm text-ink-2">
+                    {group.isRequired
+                      ? `ต้องเลือก · สูงสุด ${group.maxSelect}`
+                      : "ไม่บังคับ"}
+                  </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {group.options.map((option) => (
@@ -414,7 +461,7 @@ const ModalAddMenu = () => {
                     </span>
                   ))}
                 </div>
-              </div>
+              </button>
             ))}
           </Card>
         </div>
@@ -437,11 +484,14 @@ const ModalAddMenu = () => {
             />
           </div>
           {actionCode === "U" && (
-            <ButtonDelete
-              text="ลบเมนูนี้"
-              className="h-11"
+            <Button
+              type="link"
+              danger
+              className="font-semibold !text-[#A8071A]"
               onClick={onDelete}
-            />
+            >
+              ลบเมนูนี้
+            </Button>
           )}
         </div>
       </div>
@@ -461,4 +511,4 @@ const ModalAddMenu = () => {
   );
 };
 
-export default ModalAddMenu;
+export default MenuForm;

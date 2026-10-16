@@ -1,5 +1,3 @@
-import { Tag } from "antd";
-import { EnvironmentFilled } from "@ant-design/icons";
 import { Card } from "@/components";
 import { isRegularCustomer, mockCustomers } from "@/mock/mockData";
 
@@ -8,28 +6,25 @@ const OrderDetailCustomer = ({ order }) => {
     return c.customerId === order.customerId;
   });
 
+  let addressText = `${order.addressLabel} · ${order.deliveryAddress}`;
+  if (order.addressNote) {
+    addressText += ` · จุดสังเกต: ${order.addressNote}`;
+  }
+
   return (
     <Card title="ลูกค้าและที่อยู่">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[15px]">
+        <div className="flex flex-wrap items-center gap-2">
           <b>{customer?.displayName}</b>
           {isRegularCustomer(order.customerId) && (
-            <Tag
-              bordered={false}
-              className="ml-2 rounded-full bg-brand-soft text-brand-text"
-            >
+            <span className="rounded-full bg-[#FFF1D6] px-2.5 py-0.5 text-xs font-semibold text-[#8A3A00]">
               ลูกค้าประจำ
-            </Tag>
+            </span>
           )}
         </div>
         <b>{customer?.phone}</b>
       </div>
-      <div className="text-ink-2">
-        {order.deliveryAddress} · {order.distanceKm} กม.
-      </div>
-      <div className="flex h-36 items-center justify-center rounded-xl bg-[#F3F2EE] text-4xl text-brand-deco">
-        <EnvironmentFilled />
-      </div>
+      <div className="text-[15px] text-ink-2">{addressText}</div>
     </Card>
   );
 };

@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Input, InputNumber } from "antd";
+import { Button, Input, InputNumber } from "antd";
 import {
   FormInput,
   FormInputNumber,
   FormSwitch,
-  ButtonAdd,
   ButtonDelete,
   UseModal,
 } from "@/components";
+import { formatBaht, onlyDigits } from "@/utils/format";
 import { optionGroupDefaultValues, optionGroupSchema } from "./menuSchema";
 
 const ModalAddOption = ({ modal, setModal, onSave, onDelete }) => {
@@ -83,7 +83,13 @@ const ModalAddOption = ({ modal, setModal, onSave, onDelete }) => {
       onSave={handleSubmit(onSubmitForm)}
       footerLeft={
         modal.actionCode === "U" && (
-          <ButtonDelete type="text" text="ลบกลุ่ม" onClick={onClickDelete} />
+          <ButtonDelete
+            type="text"
+            text="ลบกลุ่ม"
+            icon={null}
+            className="px-0 text-[15px] font-semibold !text-[#B42318]"
+            onClick={onClickDelete}
+          />
         )
       }
     >
@@ -110,10 +116,10 @@ const ModalAddOption = ({ modal, setModal, onSave, onDelete }) => {
         </div>
         <div className="grid gap-2">
           <span className="text-base font-medium">
-            ตัวเลือก<span className="text-danger"> *</span>
+            ตัวเลือก<span> *</span>
           </span>
           {options.map((option, index) => (
-            <div key={index} className="grid grid-cols-[1fr_120px_40px] gap-2">
+            <div key={index} className="grid grid-cols-[1fr_140px_40px] gap-2">
               <Input
                 value={option.optionName}
                 placeholder="หมูกรอบ"
@@ -124,13 +130,18 @@ const ModalAddOption = ({ modal, setModal, onSave, onDelete }) => {
               <InputNumber
                 value={option.extraPrice}
                 min={0}
-                placeholder="10"
-                addonAfter="บาท"
+                precision={0}
+                controls={false}
+                formatter={formatBaht}
+                parser={onlyDigits}
+                placeholder="10 บาท"
+                className="w-full"
                 onChange={(value) => onChangeOption(index, "extraPrice", value)}
               />
               <ButtonDelete
                 type="text"
                 text=""
+                className="!text-[#B42318] disabled:!text-ink-3"
                 disabled={options.length === 1}
                 onClick={() => onRemoveOption(index)}
               />
@@ -139,7 +150,9 @@ const ModalAddOption = ({ modal, setModal, onSave, onDelete }) => {
           {optionError && (
             <span className="text-sm text-danger">{optionError}</span>
           )}
-          <ButtonAdd type="dashed" text="เพิ่มตัวเลือก" onClick={onAddOption} />
+          <Button type="dashed" className="add-option" onClick={onAddOption}>
+            + เพิ่มตัวเลือก
+          </Button>
         </div>
       </div>
     </UseModal>

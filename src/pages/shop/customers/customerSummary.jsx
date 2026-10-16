@@ -10,10 +10,10 @@ const CustomerSummary = ({ summary }) => {
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-card border border-solid border-line bg-white p-3 sm:p-5"
+          className="rounded-card border border-solid border-line bg-white p-5"
         >
-          <div className="text-sm text-ink-2 sm:text-base">{item.label}</div>
-          <div className="mt-1 font-head text-[28px] font-semibold sm:text-[32px]">
+          <div className="text-sm text-ink-2">{item.label}</div>
+          <div className="mt-1 font-head text-[30px] font-semibold md:text-[32px]">
             {item.value}
           </div>
         </div>

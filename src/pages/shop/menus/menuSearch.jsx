@@ -8,7 +8,7 @@ import {
 
 const MenuSearch = ({ control, onSearchForm, onClear, isEmpty }) => {
   return (
-    <Card>
+    <Card className="!p-4 md:!p-5">
       <div className="grid items-end gap-3 md:grid-cols-2 xl:grid-cols-[2fr_1fr_1fr_auto]">
         <FormInput
           control={control}
@@ -34,8 +34,12 @@ const MenuSearch = ({ control, onSearchForm, onClear, isEmpty }) => {
           showSearch={false}
         />
         <div className="flex gap-2">
-          <ButtonSearch disabled={isEmpty} onClick={() => onSearchForm()} />
-          <ButtonClear onClick={onClear} />
+          <ButtonSearch
+            className="flex-1 md:flex-none"
+            disabled={isEmpty}
+            onClick={() => onSearchForm()}
+          />
+          <ButtonClear className="flex-1 md:flex-none" onClick={onClear} />
         </div>
       </div>
     </Card>

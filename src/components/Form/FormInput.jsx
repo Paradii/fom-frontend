@@ -2,7 +2,15 @@ import { Controller } from "react-hook-form";
 import { Input } from "antd";
 import FormGroup from "./FormGroup";
 
-const FormInput = ({ control, name, label, required, hint, ...props }) => {
+const FormInput = ({
+  control,
+  name,
+  label,
+  labelClassName,
+  required,
+  hint,
+  ...props
+}) => {
   return (
     <Controller
       control={control}
@@ -10,6 +18,7 @@ const FormInput = ({ control, name, label, required, hint, ...props }) => {
       render={({ field, fieldState }) => (
         <FormGroup
           label={label}
+          labelClassName={labelClassName}
           required={required}
           hint={hint}
           error={fieldState.error?.message}

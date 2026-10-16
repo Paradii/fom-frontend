@@ -72,7 +72,7 @@ const ModalReject = ({ modal, setModal, onSave }) => {
             label="เหตุผลที่ยกเลิก"
             required
             options={reasons}
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-[22px] pt-2"
           />
           {reasonValue === "other" && (
             <FormInput
@@ -93,6 +93,11 @@ const ModalReject = ({ modal, setModal, onSave }) => {
             <div className="rounded-xl bg-[#F3F2EE] p-3">
               สลิปไม่ถูกต้อง ร้านยังไม่ได้รับเงิน จึงไม่ต้องโอนคืน
             </div>
+          )}
+          {isManualSlip && (
+            <span className="text-[13px] text-ink-3">
+              ตัวเลือก "สลิปไม่ถูกต้อง" มีเฉพาะออเดอร์ที่ระบบตรวจสลิปไม่ได้
+            </span>
           )}
         </div>
       )}

@@ -817,17 +817,18 @@ export const fetchSaveShop = (payload) => {
     account.accountName = mockShop.shopName;
   }
   if (payload.actionType === "add") {
-    const shops = mockAccounts.filter((a) => a.accountType === "shop");
     const account = {
       accountId: mockAccounts.length + 1,
       accountType: "shop",
-      accountName: `ร้านที่ ${shops.length + 1}`,
+      accountName: payload.shop.shopName,
       newOrderCount: 0,
       isOpen: false,
     };
     mockAccounts.splice(mockAccounts.length - 1, 0, account);
     mockShop.accountId = account.accountId;
     mockShop.shopName = account.accountName;
+    mockShop.phone = payload.shop.phone;
+    mockShop.promptPayId = payload.shop.promptPayId;
     mockShop.isOpen = false;
   }
   if (payload.actionType === "switch") {

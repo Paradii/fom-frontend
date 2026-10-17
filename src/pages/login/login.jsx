@@ -93,14 +93,13 @@ const Login = () => {
 
   const getRoleNote = (role) => {
     if (isRoleLocked(role.key)) {
-      return "ใช้ได้ในแอป LINE บนโทรศัพท์";
+      return "ใช้ได้เฉพาะบนโทรศัพท์ (เปิดใน LINE)";
     }
     return role.note;
   };
 
   const onAddShop = () => {
-    const resp = fetchSaveShop({ actionType: "add" });
-    if (resp.success) navigate("/shop/settings");
+    navigate("/shop/new");
   };
 
   const onSwitch = (account) => {

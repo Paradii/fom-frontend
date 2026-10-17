@@ -25,7 +25,7 @@ const ShopAccount = ({
 
   const getNote = (account) => {
     if (account.accountType === "customer" && isDesktop) {
-      return "ใช้ได้ในแอป LINE บนโทรศัพท์";
+      return "ใช้ได้เฉพาะบนโทรศัพท์ (เปิดใน LINE)";
     }
     if (account.accountType === "customer") return "เปิดในแอป LINE";
     if (account.newOrderCount > 0 && account.accountId !== accountId) {

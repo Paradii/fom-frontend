@@ -47,8 +47,7 @@ const Account = () => {
   };
 
   const onAddShop = () => {
-    const resp = fetchSaveShop({ actionType: "add" });
-    if (resp.success) navigate("/shop/settings");
+    navigate("/shop/new");
   };
 
   const onLocation = (checked) => {

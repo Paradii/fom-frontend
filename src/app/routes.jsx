@@ -1,5 +1,6 @@
 import Login from "@/pages/login/login";
 import Location from "@/pages/customer/location";
+import NewShop from "@/pages/shop/newShop/newShop";
 import Nearby from "@/pages/customer/shops/nearby";
 import Shop from "@/pages/customer/shops/shop";
 import Cart from "@/pages/customer/order/cart";
@@ -35,6 +36,12 @@ export const routes = [
     title: "ขอใช้ตำแหน่ง",
     path: "/c/location",
     element: <Location />,
+  },
+  {
+    code: "AUTH05",
+    title: "เพิ่มร้านค้า",
+    path: "/shop/new",
+    element: <NewShop />,
   },
   {
     code: "SHP01",

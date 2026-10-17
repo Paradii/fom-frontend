@@ -133,13 +133,7 @@ const ShopLayout = () => {
 
   const onAddShop = () => {
     setAccountPlace(null);
-    const resp = fetchSaveShop({ actionType: "add" });
-    if (resp.success) {
-      setShopName(mockShop.shopName);
-      setIsOpen(false);
-      navigate("/shop/settings");
-      success("เพิ่มร้านใหม่แล้ว กรอกข้อมูลร้านให้ครบก่อนเปิดรับคำสั่งซื้อ");
-    }
+    navigate("/shop/new");
   };
 
   const accountContent = (

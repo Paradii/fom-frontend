@@ -6,6 +6,7 @@ import {
   AppstoreOutlined,
   BarChartOutlined,
   BellOutlined,
+  ClockCircleOutlined,
   DownOutlined,
   FileTextOutlined,
   MenuFoldOutlined,
@@ -56,6 +57,7 @@ const ShopLayout = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(mockShop.isOpen);
   const [shopName, setShopName] = useState(mockShop.shopName);
+  const [isPending, setIsPending] = useState(mockShop.status === "pending");
   const [accountPlace, setAccountPlace] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [newOrderCount, setNewOrderCount] = useState(0);
@@ -69,11 +71,23 @@ const ShopLayout = () => {
     const result = mockOrders.filter((o) => o.status === "paid");
     setNewOrderCount(result.length);
     setShopName(mockShop.shopName);
+    setIsOpen(mockShop.isOpen);
+    setIsPending(mockShop.status === "pending");
   };
 
   const { success, confirm } = useNotify();
-  const openText = isOpen ? "เปิดรับคำสั่งซื้อ" : "ปิดรับคำสั่งซื้อ";
-  const openClass = isOpen ? "text-[#0E6E5C]" : "text-ink-3";
+  const getOpenText = () => {
+    if (isPending) return "รออนุมัติ";
+    return isOpen ? "เปิดรับคำสั่งซื้อ" : "ปิดรับคำสั่งซื้อ";
+  };
+
+  const getOpenClass = () => {
+    if (isPending) return "text-[#8A5A00]";
+    return isOpen ? "text-[#0E6E5C]" : "text-ink-3";
+  };
+
+  const openText = getOpenText();
+  const openClass = getOpenClass();
 
   const onSubmitForm = (formValue) => {
     const resp = fetchSaveShop({
@@ -116,6 +130,8 @@ const ShopLayout = () => {
     });
     if (resp.success) {
       setShopName(mockShop.shopName);
+      setIsOpen(mockShop.isOpen);
+      setIsPending(mockShop.status === "pending");
       success(`สลับไปที่ ${account.accountName} แล้ว`);
     }
   };
@@ -197,7 +213,11 @@ const ShopLayout = () => {
                   <span className="h-2 w-2 rounded-full bg-current" />
                   {openText}
                 </span>
-                <Switch checked={isOpen} onChange={onToggleOpen} />
+                <Switch
+                  checked={isOpen}
+                  disabled={isPending}
+                  onChange={onToggleOpen}
+                />
               </div>
             </div>
           )}
@@ -277,7 +297,7 @@ const ShopLayout = () => {
             {openText}
           </span>
         </button>
-        <Switch checked={isOpen} onChange={onToggleOpen} />
+        <Switch checked={isOpen} disabled={isPending} onChange={onToggleOpen} />
       </header>
 
       <UseModal
@@ -298,6 +318,18 @@ const ShopLayout = () => {
 
       <main className="box-border min-w-0 flex-1 p-8 pb-[116px] lg:pb-8">
         <div className={isCollapsed ? "max-w-[1400px]" : "max-w-[1136px]"}>
+          {isPending && (
+            <div className="mb-5 flex gap-3 rounded-[14px] border border-solid border-[#F5D58A] bg-[#FFF6D6] p-4 text-base text-[#5C3D00]">
+              <ClockCircleOutlined className="mt-1 text-xl" />
+              <div className="flex flex-col gap-1">
+                <b>ร้านนี้รอผู้ดูแลระบบอนุมัติ</b>
+                <span>
+                  ระหว่างนี้เพิ่มเมนูและตั้งค่าร้านได้
+                  เปิดรับคำสั่งซื้อได้เมื่ออนุมัติแล้ว
+                </span>
+              </div>
+            </div>
+          )}
           <Outlet />
         </div>
       </main>

@@ -1,5 +1,5 @@
 import { Card } from "@/components";
-import { isRegularCustomer, mockCustomers } from "@/mock/mockData";
+import { isRegularCustomer, mockCustomers } from "@/services/data";
 
 const OrderDetailCustomer = ({ order }) => {
   const customer = mockCustomers.find((c) => {

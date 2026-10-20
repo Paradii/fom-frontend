@@ -12,8 +12,11 @@ import CustomerLayout from "@/layouts/CustomerLayout";
 import {
   fetchSaveDelivery,
   getBatchByToken,
+  loadBatch,
   mockOrders,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { formatThaiDate, formatTime } from "@/utils/format";
 
 const SOURCE_TEXT = {
@@ -58,8 +61,8 @@ const Deliver = () => {
     e.target.value = "";
   };
 
-  const onConfirm = () => {
-    const resp = fetchSaveDelivery({
+  const onConfirm = async () => {
+    const resp = await fetchSaveDelivery({
       actionType: "deliver",
       token: token,
       orderId: order.orderId,
@@ -71,6 +74,8 @@ const Deliver = () => {
     if (resp.success) {
       notify.success(`ส่ง #${order.orderId} สำเร็จแล้ว`);
       navigate(`/rider/${token}`);
+    } else {
+      notify.error(resp.message);
     }
   };
 
@@ -166,4 +171,4 @@ const Deliver = () => {
   );
 };
 
-export default Deliver;
+export default withLoad(Deliver, ({ token }) => loadBatch(token));

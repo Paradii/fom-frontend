@@ -7,7 +7,12 @@ import { CheckCircleFilled, EnvironmentOutlined } from "@ant-design/icons";
 import { FormInput, FormInputNumber, FormTextArea } from "@/components";
 import useNotify from "@/hooks/useNotify";
 import LoginLayout from "@/layouts/LoginLayout";
-import { fetchSaveShop, mockShop } from "@/mock/mockData";
+import {
+  fetchSaveShop,
+  getMyLocation,
+  mockMe,
+  mockShop,
+} from "@/services/data";
 import { onlyDigits } from "@/utils/format";
 import { newShopSchema } from "./newShopSchema";
 
@@ -22,7 +27,9 @@ const EMPTY_FORM = {
 
 const NewShop = () => {
   const navigate = useNavigate();
-  const { success } = useNotify();
+  const { success, error } = useNotify();
+  const [location, setLocation] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [isPinError, setIsPinError] = useState(false);
 
@@ -31,23 +38,29 @@ const NewShop = () => {
     resolver: yupResolver(newShopSchema),
   });
 
-  const onPin = () => {
+  const onPin = async () => {
+    const position = await getMyLocation();
+    setLocation(position);
     setIsPinned(true);
     setIsPinError(false);
   };
 
-  const onSave = (values) => {
+  const onSave = async (values) => {
     if (!isPinned) {
       setIsPinError(true);
       return;
     }
-    const resp = fetchSaveShop({
+    setIsSaving(true);
+    const resp = await fetchSaveShop({
       actionType: "request",
-      shop: { ...values, isPinned: true },
+      shop: { ...values, ...location, isPinned: true },
     });
+    setIsSaving(false);
     if (resp.success) {
       success("ส่งคำขอเปิดร้านแล้ว รอผู้ดูแลระบบอนุมัติ");
       navigate("/shop/menus");
+    } else {
+      error(resp.message);
     }
   };
 
@@ -66,7 +79,7 @@ const NewShop = () => {
       </div>
       <div className="flex flex-col gap-0.5 rounded-xl bg-bg p-3">
         <span className="text-sm text-ink-2">เจ้าของร้าน</span>
-        <b>{mockShop.ownerName} (LINE)</b>
+        <b>{mockMe.displayName || mockShop.ownerName} (LINE)</b>
       </div>
       <FormInput
         control={control}
@@ -149,6 +162,7 @@ const NewShop = () => {
         type="primary"
         size="large"
         className="h-12 font-semibold"
+        loading={isSaving}
         onClick={handleSubmit(onSave, onInvalid)}
       >
         ส่งคำขอเปิดร้าน

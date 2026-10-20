@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "antd";
 import { BellOutlined } from "@ant-design/icons";
-import { itemText, paidTotal } from "@/mock/mockData";
+import { itemText, paidTotal } from "@/services/data";
 import { formatPrice } from "@/utils/format";
 
 const LIMIT_MINUTES = 15;

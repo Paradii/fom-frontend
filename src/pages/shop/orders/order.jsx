@@ -8,13 +8,14 @@ import {
 } from "@ant-design/icons";
 import PagePattern from "@/layouts/PagePattern";
 import useNotify from "@/hooks/useNotify";
+import useDataChange from "@/hooks/useDataChange";
 import {
   fetchSaveBatch,
   fetchSaveOrder,
   mockBatches,
   mockOrders,
   paidTotal,
-} from "@/mock/mockData";
+} from "@/services/data";
 import { formatDay, formatPrice } from "@/utils/format";
 import { playNewOrderSound } from "@/services/sound";
 import OrderNew from "./orderNew";
@@ -26,6 +27,8 @@ import ModalQr from "./modalQr";
 import ModalReject from "./modalReject";
 import OrderCancelled from "./orderCancelled";
 import ModalRefund from "./modalRefund";
+
+const WORKING_STATUS = ["paid", "preparing", "ready", "delivering"];
 
 const Order = () => {
   const navigate = useNavigate();
@@ -51,6 +54,9 @@ const Order = () => {
     onSearchForm();
   }, []);
 
+  // ShopLayout ดึงคำสั่งซื้อจาก backend เป็นระยะ โหลดเสร็จเมื่อไหร่ให้หน้านี้อ่านใหม่
+  useDataChange(() => onSearchForm());
+
   const onToggleSound = () => {
     if (!isSoundOn) playNewOrderSound();
     setIsSoundOn(!isSoundOn);
@@ -60,14 +66,15 @@ const Order = () => {
     const today = new Date().toDateString();
     const result = mockOrders.filter((o) => {
       const isToday = new Date(o.createdAt).toDateString() === today;
-      return isToday || o.refundStatus === "pending";
+      const isWorking = WORKING_STATUS.includes(o.status);
+      return isToday || isWorking || o.refundStatus === "pending";
     });
     result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     setOrders([...result]);
     setBatches(mockBatches.filter((b) => b.status === "active"));
   };
 
-  const onSubmitForm = ({ formValue, actionType }) => {
+  const onSubmitForm = async ({ formValue, actionType }) => {
     const payload = {
       actionType: actionType,
       orderId: formValue.orderId,
@@ -77,26 +84,29 @@ const Order = () => {
       slipUrl: formValue.slipUrl,
       by: formValue.by || "ร้าน",
     };
-    const resp = fetchSaveOrder(payload);
+    const resp = await fetchSaveOrder(payload);
     if (resp.success) {
       onSearchForm();
+    } else {
+      error(resp.message);
     }
+    return resp;
   };
 
-  const onAccept = (order) => {
-    onSubmitForm({
+  const onAccept = async (order) => {
+    const resp = await onSubmitForm({
       formValue: { orderId: order.orderId },
       actionType: "accept",
     });
-    success("รับคำสั่งซื้อแล้ว เริ่มทำได้เลย");
+    if (resp.success) success("รับคำสั่งซื้อแล้ว เริ่มทำได้เลย");
   };
 
-  const onReady = (order) => {
-    onSubmitForm({
+  const onReady = async (order) => {
+    const resp = await onSubmitForm({
       formValue: { orderId: order.orderId, status: "ready" },
       actionType: "status",
     });
-    success(`#${order.orderId} พร้อมส่งแล้ว`);
+    if (resp.success) success(`#${order.orderId} พร้อมส่งแล้ว`);
   };
 
   const onSelect = (order) => {
@@ -116,12 +126,14 @@ const Order = () => {
     }
   };
 
-  const onSaveBatch = (orderIds) => {
-    const resp = fetchSaveBatch({ actionType: "A", orderIds: orderIds });
+  const onSaveBatch = async (orderIds) => {
+    const resp = await fetchSaveBatch({ actionType: "A", orderIds: orderIds });
     if (resp.success) {
       setSelectedIds([]);
       onSearchForm();
       setQrModal({ open: true, data: resp.batch });
+    } else {
+      error(resp.message);
     }
   };
 
@@ -131,8 +143,8 @@ const Order = () => {
       content: "ลิงก์นี้จะใช้ไม่ได้ ออเดอร์จะกลับไปอยู่ในช่องพร้อมส่ง",
       okText: "ยกเลิก QR",
       danger: true,
-      onOk: () => {
-        const resp = fetchSaveBatch({
+      onOk: async () => {
+        const resp = await fetchSaveBatch({
           actionType: "cancel",
           batchId: batch.batchId,
         });
@@ -140,8 +152,10 @@ const Order = () => {
           setQrModal({ open: false, data: null });
           onSearchForm();
           success("ยกเลิก QR แล้ว");
+        } else if (resp.status === 403) {
+          error("ตอนนี้ยกเลิก QR ได้เฉพาะผู้ดูแลระบบ (backend ยังไม่เปิดให้ร้านยกเลิก)");
         } else {
-          error("คนส่งสแกนรอบนี้ไปแล้ว ยกเลิก QR ไม่ได้");
+          error(resp.message || "คนส่งสแกนรอบนี้ไปแล้ว ยกเลิก QR ไม่ได้");
         }
       },
     });
@@ -151,8 +165,8 @@ const Order = () => {
     setModal({ open: true, data: order });
   };
 
-  const onSaveReject = (order, reason, isRefund) => {
-    onSubmitForm({
+  const onSaveReject = async (order, reason, isRefund) => {
+    const resp = await onSubmitForm({
       formValue: {
         orderId: order.orderId,
         reason: reason,
@@ -160,11 +174,11 @@ const Order = () => {
       },
       actionType: "cancel",
     });
-    success(`ยกเลิกแล้ว แจ้งลูกค้าว่า "${reason}"`);
+    if (resp.success) success(`ยกเลิกแล้ว แจ้งลูกค้าว่า "${reason}"`);
   };
 
-  const onTimeout = (order) => {
-    onSubmitForm({
+  const onTimeout = async (order) => {
+    const resp = await onSubmitForm({
       formValue: {
         orderId: order.orderId,
         reason: "ร้านไม่รับภายใน 15 นาที",
@@ -173,19 +187,19 @@ const Order = () => {
       },
       actionType: "cancel",
     });
-    warning(`คำสั่งซื้อ #${order.orderId} ถูกยกเลิกอัตโนมัติ`);
+    if (resp.success) warning(`คำสั่งซื้อ #${order.orderId} ถูกยกเลิกอัตโนมัติ`);
   };
 
   const onRefund = (order) => {
     setRefundModal({ open: true, data: order });
   };
 
-  const onSaveRefund = (order, slip) => {
-    onSubmitForm({
+  const onSaveRefund = async (order, slip) => {
+    const resp = await onSubmitForm({
       formValue: { orderId: order.orderId, slipUrl: slip.url },
       actionType: "refund",
     });
-    success("บันทึกการโอนคืนแล้ว แจ้งลูกค้าทาง LINE แล้ว");
+    if (resp.success) success("บันทึกการโอนคืนแล้ว แจ้งลูกค้าทาง LINE แล้ว");
   };
 
   const onView = (order) => {

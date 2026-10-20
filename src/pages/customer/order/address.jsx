@@ -11,9 +11,12 @@ import CustomerLayout from "@/layouts/CustomerLayout";
 import {
   fetchSaveAddress,
   fetchSaveMe,
+  loadAddresses,
   mockAddresses,
   mockMe,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { addressSchema } from "./addressSchema";
 
 const BACK_PATH = {
@@ -59,24 +62,25 @@ const Address = () => {
     });
   };
 
-  const onLocation = () => {
-    const resp = fetchSaveMe({ actionType: "location", isLocationOn: true });
+  const onLocation = async () => {
+    const resp = await fetchSaveMe({ actionType: "location", isLocationOn: true });
     if (resp.success) {
       setIsLocationOn(true);
       notify.success("บันทึกตำแหน่งปัจจุบันแล้ว");
     }
   };
 
-  const onSave = (values) => {
-    const resp = fetchSaveAddress({
+  const onSave = async (values) => {
+    const resp = await fetchSaveAddress({
       actionType: editId ? "U" : "A",
       addressId: editId,
       address: values,
     });
     if (resp.success) navigate(backTo);
+    else notify.error(resp.message);
   };
 
-  const onUse = () => {
+  const onUse = async () => {
     const values = getValues();
     const isTyping = values.label || values.phone || values.address;
     if (editId || isTyping) {
@@ -87,7 +91,7 @@ const Address = () => {
       notify.warning("กรุณาเลือกหรือเพิ่มที่อยู่จัดส่ง");
       return;
     }
-    const resp = fetchSaveAddress({
+    const resp = await fetchSaveAddress({
       actionType: "select",
       addressId: selectedId,
     });
@@ -100,13 +104,15 @@ const Address = () => {
       content: "ลบแล้วต้องเพิ่มใหม่ถ้าจะใช้อีก",
       okText: "ลบที่อยู่",
       danger: true,
-      onOk: () => {
-        const resp = fetchSaveAddress({ actionType: "D", addressId: editId });
+      onOk: async () => {
+        const resp = await fetchSaveAddress({ actionType: "D", addressId: editId });
         if (resp.success) {
           setAddresses([...mockAddresses]);
           setSelectedId(mockMe.addressId);
           setEditId(null);
           reset(EMPTY_FORM);
+        } else {
+          notify.error(resp.message);
         }
       },
     });
@@ -272,4 +278,4 @@ const Address = () => {
   );
 };
 
-export default Address;
+export default withLoad(Address, () => loadAddresses());

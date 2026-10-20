@@ -11,10 +11,13 @@ import CustomerLayout from "@/layouts/CustomerLayout";
 import {
   getBatchByToken,
   getLog,
+  loadBatch,
   mockCustomers,
   mockOrders,
   mockShop,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { formatTime } from "@/utils/format";
 
 const JobDetail = () => {
@@ -120,4 +123,4 @@ const JobDetail = () => {
   );
 };
 
-export default JobDetail;
+export default withLoad(JobDetail, ({ token }) => loadBatch(token));

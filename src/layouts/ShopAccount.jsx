@@ -4,7 +4,7 @@ import {
   PlusOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import { mockAccounts, mockShop } from "@/mock/mockData";
+import { mockAccounts, mockShop } from "@/services/data";
 
 const TYPE_TEXT = {
   shop: "ร้านค้า",

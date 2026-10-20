@@ -9,9 +9,13 @@ import CustomerLayout from "@/layouts/CustomerLayout";
 import {
   fetchSaveMe,
   fetchSaveShop,
+  loadAddresses,
+  loadMyOrders,
   mockAddresses,
   mockMe,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad, { loadAll } from "@/utils/withLoad";
+
 import { formatThaiDate, onlyDigits } from "@/utils/format";
 import ModalPolicy from "./modalPolicy";
 
@@ -41,17 +45,18 @@ const Account = () => {
     return `ยินยอมเมื่อ ${formatThaiDate(mockMe.consentAt)} · ปิดได้ทุกเมื่อ`;
   };
 
-  const onSelectAccount = (key) => {
-    const resp = fetchSaveShop({ actionType: "switch", accountId: key });
+  const onSelectAccount = async (key) => {
+    const resp = await fetchSaveShop({ actionType: "switch", accountId: key });
     if (resp.success) navigate("/shop/orders");
+    else notify.error(resp.message);
   };
 
   const onAddShop = () => {
     navigate("/shop/new");
   };
 
-  const onLocation = (checked) => {
-    const resp = fetchSaveMe({ actionType: "location", isLocationOn: checked });
+  const onLocation = async (checked) => {
+    const resp = await fetchSaveMe({ actionType: "location", isLocationOn: checked });
     if (resp.success) setIsLocationOn(checked);
   };
 
@@ -61,25 +66,31 @@ const Account = () => {
     setIsRefundOpen(true);
   };
 
-  const onSaveRefund = () => {
+  const onSaveRefund = async () => {
     if (onlyDigits(refundPromptPay).length !== 10) {
       setIsError(true);
       return;
     }
-    const resp = fetchSaveMe({
+    const resp = await fetchSaveMe({
       actionType: "refund",
       refundPromptPay: refundPromptPay,
     });
     if (resp.success) {
       setIsRefundOpen(false);
       notify.success();
+    } else {
+      notify.error(resp.message);
     }
   };
 
-  const onDelete = () => {
-    const resp = fetchSaveMe({ actionType: "delete" });
+  const onDelete = async () => {
+    const resp = await fetchSaveMe({ actionType: "delete" });
     if (!resp.success) {
-      notify.error("ยังมีคำสั่งซื้อที่กำลังดำเนินการ รอให้เสร็จก่อนจึงลบได้");
+      notify.error(
+        resp.status
+          ? resp.message
+          : "ยังมีคำสั่งซื้อที่กำลังดำเนินการ รอให้เสร็จก่อนจึงลบได้",
+      );
       return;
     }
     navigate("/login");
@@ -282,4 +293,4 @@ const Account = () => {
   );
 };
 
-export default Account;
+export default withLoad(Account, () => loadAll(loadAddresses(), loadMyOrders()));

@@ -3,7 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Empty } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 import CustomerLayout from "@/layouts/CustomerLayout";
-import { fetchSaveMyOrder, getOrder, paidTotal } from "@/mock/mockData";
+import {
+  fetchSaveMyOrder,
+  getOrder,
+  loadMyOrder,
+  paidTotal,
+  USE_MOCK,
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import PayHeader from "./payHeader";
 
 const Verifying = () => {
@@ -26,18 +34,34 @@ const Verifying = () => {
       return;
     }
     const timer = setInterval(() => {
-      setStep((current) => current + 1);
+      setStep((current) => Math.min(current + 1, steps.length));
     }, 700);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
     if (step < steps.length) return;
-    const resp = fetchSaveMyOrder({
-      actionType: "paid",
-      orderId: order.orderId,
-    });
-    if (resp.success) navigate(`/c/tracking/${order.orderId}`);
+    if (USE_MOCK) {
+      fetchSaveMyOrder({ actionType: "paid", orderId: order.orderId }).then(
+        (resp) => {
+          if (resp.success) navigate(`/c/tracking/${order.orderId}`);
+        },
+      );
+      return;
+    }
+    // backend ตั้งสลิปเป็น manual_check ให้ผู้ดูแลระบบตรวจ ถามผลทุก 5 วินาที
+    const onCheck = async () => {
+      await loadMyOrder(order.orderId);
+      const latest = getOrder(order.orderId);
+      if (latest.status !== "pending_payment") {
+        navigate(`/c/tracking/${order.orderId}`);
+      } else if (latest.paymentStatus === "manual_failed") {
+        navigate(`/c/slip-fail/${order.orderId}`);
+      }
+    };
+    onCheck();
+    const timer = setInterval(onCheck, 5000);
+    return () => clearInterval(timer);
   }, [step]);
 
   if (!order) {
@@ -103,7 +127,9 @@ const Verifying = () => {
         <div className="flex flex-col items-center gap-1">
           <h2 className="text-[22px] font-semibold">กำลังตรวจสลิป</h2>
           <p className="m-0 text-[15px] text-ink-2">
-            ใช้เวลาไม่กี่วินาที อย่าเพิ่งปิดหน้านี้
+            {!USE_MOCK && step >= steps.length
+              ? "ส่งสลิปให้ผู้ดูแลระบบตรวจแล้ว ผลจะขึ้นหน้านี้อัตโนมัติ"
+              : "ใช้เวลาไม่กี่วินาที อย่าเพิ่งปิดหน้านี้"}
           </p>
         </div>
         <ul className="m-0 flex w-full list-none flex-col gap-3 rounded-2xl border border-solid border-line bg-white p-4">
@@ -117,4 +143,4 @@ const Verifying = () => {
   );
 };
 
-export default Verifying;
+export default withLoad(Verifying, ({ orderId }) => loadMyOrder(Number(orderId)));

@@ -1,5 +1,5 @@
 import { CheckOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
-import { mockAccounts, mockMe } from "@/mock/mockData";
+import { mockAccounts, mockMe } from "@/services/data";
 
 const SHOP_COLORS = [
   "bg-[#FFF6D6] text-brand-text",

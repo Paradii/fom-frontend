@@ -3,7 +3,16 @@ import { Button, Empty, Image } from "antd";
 import { PhoneOutlined, ShoppingOutlined } from "@ant-design/icons";
 import CustomerHeader from "@/layouts/CustomerHeader";
 import CustomerLayout from "@/layouts/CustomerLayout";
-import { getLog, getOrder, getShop, mockMe, paidTotal } from "@/mock/mockData";
+import {
+  getLog,
+  getOrder,
+  getShop,
+  loadMyOrder,
+  mockMe,
+  paidTotal,
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { formatPrice, formatTime } from "@/utils/format";
 
 const BY_TEXT = {
@@ -162,4 +171,4 @@ const Cancelled = () => {
   );
 };
 
-export default Cancelled;
+export default withLoad(Cancelled, ({ orderId }) => loadMyOrder(Number(orderId)));

@@ -12,8 +12,12 @@ import {
   getRecommendMenus,
   getShop,
   getShopMenus,
+  loadMyOrders,
+  loadShopMenus,
   mockCart,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad, { loadAll } from "@/utils/withLoad";
+
 import { formatPrice } from "@/utils/format";
 import ModalMenuOption from "./modalMenuOption";
 import ShopPills from "./shopPills";
@@ -171,8 +175,11 @@ const Shop = () => {
       <div className="relative z-[1] mx-4 -mt-7 flex flex-col gap-1.5 rounded-2xl bg-white p-4 shadow-[0_2px_8px_rgba(28,27,25,0.08)]">
         <h1 className="text-[22px] font-semibold">{shop.shopName}</h1>
         <span className="text-sm text-ink-2">
-          {shop.categoryName} · เปิด {shop.openTime}–{shop.closeTime} ·{" "}
-          {shop.distance} กม.
+          {shop.categoryName}
+          {shop.openTime
+            ? ` · เปิด ${shop.openTime}–${shop.closeTime}`
+            : " · วันนี้ปิด"}
+          {shop.distance != null && ` · ${shop.distance} กม.`}
         </span>
         <ShopPills shop={shop} />
       </div>
@@ -221,4 +228,4 @@ const Shop = () => {
   );
 };
 
-export default Shop;
+export default withLoad(Shop, ({ shopId }) => loadAll(loadShopMenus(Number(shopId)), loadMyOrders()));

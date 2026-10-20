@@ -1,6 +1,6 @@
 import { CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { Card } from "@/components";
-import { paidTotal } from "@/mock/mockData";
+import { paidTotal } from "@/services/data";
 import { formatPrice, formatTime } from "@/utils/format";
 
 const OrderDetailSlip = ({ order }) => {

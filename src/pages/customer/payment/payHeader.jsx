@@ -1,5 +1,5 @@
 import CustomerHeader from "@/layouts/CustomerHeader";
-import { getShop } from "@/mock/mockData";
+import { getShop } from "@/services/data";
 
 const PayHeader = ({ order }) => {
   const shop = getShop(order.shopId);

@@ -7,6 +7,7 @@ import {
   MinusOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
+import useNotify from "@/hooks/useNotify";
 import CustomerHeader from "@/layouts/CustomerHeader";
 import CustomerLayout from "@/layouts/CustomerLayout";
 import {
@@ -15,15 +16,20 @@ import {
   fetchSaveMyOrder,
   getShop,
   itemTotal,
+  loadAddresses,
+  loadShopMenus,
   mockAddresses,
   mockCart,
   mockMe,
   optionText,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad, { loadAll } from "@/utils/withLoad";
+
 import { formatPrice, onlyDigits } from "@/utils/format";
 
 const Cart = () => {
   const navigate = useNavigate();
+  const notify = useNotify();
   const [items, setItems] = useState([...mockCart.items]);
   const [refundPromptPay, setRefundPromptPay] = useState(
     mockMe.refundPromptPay,
@@ -59,16 +65,17 @@ const Cart = () => {
     setItems([...mockCart.items]);
   };
 
-  const onConfirm = () => {
+  const onConfirm = async () => {
     if (onlyDigits(refundPromptPay).length !== 10) {
       setIsError(true);
       return;
     }
-    const resp = fetchSaveMyOrder({
+    const resp = await fetchSaveMyOrder({
       actionType: "A",
       refundPromptPay: refundPromptPay,
     });
     if (resp.success) navigate(`/c/payment/${resp.order.orderId}`);
+    else notify.error(resp.message);
   };
 
   const getItemNote = (item) => {
@@ -238,4 +245,4 @@ const Cart = () => {
   );
 };
 
-export default Cart;
+export default withLoad(Cart, () => loadAll(loadAddresses(), mockCart.shopId ? loadShopMenus(mockCart.shopId) : null));

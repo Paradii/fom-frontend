@@ -28,14 +28,23 @@ src/
   components/  ของกลาง: Button, Card, StatusBadge, Form/, Use/
   layouts/     ShopLayout (เมนูข้าง + แถบล่าง), PagePattern (หัวหน้า), ShopAccount (รายการบัญชี), LoginLayout (หน้าเข้าสู่ระบบ)
   hooks/       useNotify, useDropdown, useSearch
-  mock/        mockData.js ข้อมูลตัวอย่าง และฟังก์ชัน fetchSave... แทน API
-  services/    sound.js เสียงแจ้งเตือน, dropdown.js
+  mock/        mockData.js ข้อมูลตัวอย่าง (ใช้เมื่อ VITE_USE_MOCK=true)
+  services/    data.js ชั้นข้อมูลกลาง (เรียก backend แล้วเติม store), http.js, mapper.js, token.js, sound.js, dropdown.js
   utils/       format.js, pagination.js
 ```
 
 แต่ละหน้าแบ่งไฟล์แบบ AquaDAT เช่น `menu.jsx` (หน้าหลัก ถือ state และบันทึก), `menuSearch.jsx`, `menuList.jsx`, `menuForm.jsx`
 
-ตอนนี้ยังไม่ได้ต่อ backend ทุกหน้าใช้ข้อมูลใน `mock/mockData.js` ตอนต่อ API จริงให้เปลี่ยนฟังก์ชัน `fetchSave...` ในไฟล์นั้น
+## ต่อ backend
+
+ทุกหน้า import ข้อมูลจาก `@/services/data` ไม่ใช่จาก mock โดยตรง
+
+- `VITE_USE_MOCK=false` (ค่าเริ่มต้น) เรียก FOMBackend ที่ `VITE_API_URL` แล้วแปลงข้อมูลให้อยู่ในรูปแบบเดียวกับ mock (`services/mapper.js`)
+- `VITE_USE_MOCK=true` ใช้ข้อมูลใน `mock/mockData.js` เหมือนเดิม ไม่ต้องเปิด backend
+- `fetchSave...` คืน Promise ต้อง `await` และเช็ก `resp.success` ถ้าไม่สำเร็จมี `resp.message`
+- หน้าฝั่งลูกค้าและคนส่งห่อด้วย `withLoad` (`utils/withLoad.jsx`) โหลดข้อมูลเสร็จก่อนค่อยแสดง หน้าร้านเรียก `load...` เองใน `useEffect`
+- เข้าสู่ระบบด้วย LINE (LIFF) อย่างเดียว ต้องตั้ง `VITE_LIFF_ID` ก่อน
+- รูปสลิป รูปส่งของ และรูปเมนูต้องมีบริการอัปโหลด ตั้ง `VITE_UPLOAD_URL` (backend ยังไม่มี API นี้)
 
 ## UI
 

@@ -11,8 +11,11 @@ import {
   getLog,
   getOrder,
   getShop,
+  loadMyOrder,
   paidTotal,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { formatPrice, formatTime } from "@/utils/format";
 
 const HERO = {
@@ -127,13 +130,14 @@ const Tracking = () => {
       content: "ร้านจะโอนเงินคืนเข้าพร้อมเพย์ของคุณโดยตรง",
       okText: "ยกเลิกคำสั่งซื้อ",
       danger: true,
-      onOk: () => {
-        const resp = fetchSaveMyOrder({
+      onOk: async () => {
+        const resp = await fetchSaveMyOrder({
           actionType: "cancel",
           orderId: order.orderId,
           reason: "ลูกค้ายกเลิกก่อนร้านรับคำสั่งซื้อ",
         });
         if (resp.success) navigate(`/c/cancelled/${order.orderId}`);
+        else notify.error(resp.message);
       },
     });
   };
@@ -230,4 +234,4 @@ const Tracking = () => {
   );
 };
 
-export default Tracking;
+export default withLoad(Tracking, ({ orderId }) => loadMyOrder(Number(orderId)));

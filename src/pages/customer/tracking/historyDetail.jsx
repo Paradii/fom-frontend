@@ -10,8 +10,11 @@ import {
   getOrder,
   getShop,
   itemTotal,
+  loadMyOrder,
   paidTotal,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { formatPrice, formatThaiDate, formatTime } from "@/utils/format";
 
 const HistoryDetail = () => {
@@ -152,4 +155,4 @@ const HistoryDetail = () => {
   );
 };
 
-export default HistoryDetail;
+export default withLoad(HistoryDetail, ({ orderId }) => loadMyOrder(Number(orderId)));

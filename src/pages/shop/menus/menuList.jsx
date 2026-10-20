@@ -1,7 +1,7 @@
 import { Button, Switch } from "antd";
 import { PictureOutlined } from "@ant-design/icons";
 import { Card, UsePagination, UseTable } from "@/components";
-import { mockTags } from "@/mock/mockData";
+import { mockTags } from "@/services/data";
 import { formatPrice } from "@/utils/format";
 
 const TAG_ORDER = ["ingredient", "cooking_method", "taste"];

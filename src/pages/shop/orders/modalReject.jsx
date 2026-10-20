@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { FormInput, FormRadio, UseModal } from "@/components";
-import { paidTotal } from "@/mock/mockData";
+import { paidTotal } from "@/services/data";
 import { formatPrice } from "@/utils/format";
 
 const REASONS = [

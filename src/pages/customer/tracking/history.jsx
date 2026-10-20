@@ -9,8 +9,11 @@ import {
   getMyOrders,
   getShop,
   itemText,
+  loadMyOrders,
   paidTotal,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { formatDateTime, formatPrice } from "@/utils/format";
 
 const TABS = [
@@ -151,4 +154,4 @@ const History = () => {
   );
 };
 
-export default History;
+export default withLoad(History, () => loadMyOrders());

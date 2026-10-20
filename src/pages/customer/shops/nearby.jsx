@@ -16,10 +16,15 @@ import {
   getActiveOrder,
   getShop,
   getShopMenus,
+  loadAddresses,
+  loadMyOrders,
+  loadNearbyShops,
   mockAddresses,
   mockMe,
   mockNearbyShops,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad, { loadAll } from "@/utils/withLoad";
+
 import ShopPills from "./shopPills";
 
 const Nearby = () => {
@@ -61,7 +66,8 @@ const Nearby = () => {
             {shop.shopName}
           </span>
           <span className="text-sm text-ink-2">
-            {shop.categoryName} · {shop.distance} กม.
+            {shop.categoryName}
+            {shop.distance != null && ` · ${shop.distance} กม.`}
           </span>
           <ShopPills shop={shop} />
         </span>
@@ -147,4 +153,4 @@ const Nearby = () => {
   );
 };
 
-export default Nearby;
+export default withLoad(Nearby, () => loadAll(loadNearbyShops(), loadAddresses(), loadMyOrders()));

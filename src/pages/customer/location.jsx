@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Checkbox } from "antd";
 import { EnvironmentOutlined } from "@ant-design/icons";
 import { Logo } from "@/components";
-import { fetchSaveMe, mockMe } from "@/mock/mockData";
+import { fetchSaveMe, mockMe } from "@/services/data";
 import ModalPolicy from "./modalPolicy";
 
 const Location = () => {
@@ -11,13 +11,13 @@ const Location = () => {
   const [isAccept, setIsAccept] = useState(false);
   const [isPolicyOpen, setIsPolicyOpen] = useState(false);
 
-  const onAllow = () => {
-    const resp = fetchSaveMe({ actionType: "consent", isLocationOn: true });
+  const onAllow = async () => {
+    const resp = await fetchSaveMe({ actionType: "consent", isLocationOn: true });
     if (resp.success) navigate("/c/nearby");
   };
 
-  const onManual = () => {
-    const resp = fetchSaveMe({ actionType: "consent", isLocationOn: false });
+  const onManual = async () => {
+    const resp = await fetchSaveMe({ actionType: "consent", isLocationOn: false });
     if (resp.success) navigate("/c/address/login");
   };
 

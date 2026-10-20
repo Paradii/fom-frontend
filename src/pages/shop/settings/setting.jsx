@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "antd";
 import PagePattern from "@/layouts/PagePattern";
 import useNotify from "@/hooks/useNotify";
-import { fetchSaveShop, mockShop } from "@/mock/mockData";
+import { fetchSaveShop, mockShop } from "@/services/data";
 import { settingSchema } from "./settingSchema";
 import SettingShop from "./settingShop";
 import SettingHours from "./settingHours";
@@ -12,7 +12,8 @@ import SettingDelivery from "./settingDelivery";
 import SettingPayment from "./settingPayment";
 
 const Setting = () => {
-  const { success } = useNotify();
+  const { success, error } = useNotify();
+  const [isSaving, setIsSaving] = useState(false);
 
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
@@ -37,8 +38,9 @@ const Setting = () => {
     });
   };
 
-  const onSubmitForm = (formValue) => {
-    const resp = fetchSaveShop({
+  const onSubmitForm = async (formValue) => {
+    setIsSaving(true);
+    const resp = await fetchSaveShop({
       actionType: "U",
       shop: {
         shopName: formValue.shopName.trim(),
@@ -50,9 +52,12 @@ const Setting = () => {
         accountName: formValue.accountName.trim(),
       },
     });
+    setIsSaving(false);
     if (resp.success) {
       success("บันทึกการตั้งค่าร้านเรียบร้อย");
       onSearchForm();
+    } else {
+      error(resp.message);
     }
   };
 
@@ -60,7 +65,11 @@ const Setting = () => {
     <PagePattern
       title="ตั้งค่าร้าน"
       extra={
-        <Button type="primary" onClick={handleSubmit(onSubmitForm)}>
+        <Button
+          type="primary"
+          loading={isSaving}
+          onClick={handleSubmit(onSubmitForm)}
+        >
           บันทึกการเปลี่ยนแปลง
         </Button>
       }

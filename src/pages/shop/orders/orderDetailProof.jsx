@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Image } from "antd";
 import { Card } from "@/components";
-import { getBatch } from "@/mock/mockData";
+import { getBatch } from "@/services/data";
 import { formatDate, formatTime } from "@/utils/format";
 
 const TIME_SOURCE = {

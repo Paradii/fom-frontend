@@ -15,6 +15,7 @@ export const mockShop = {
   shopId: 1,
   accountId: 1,
   shopName: "ครัวป้าแดง",
+  status: "approved",
   ownerName: "ป้าแดง ใจดี",
   phone: "081-234-5678",
   address: "12/3 ซอยประชาอุทิศ 5 ต.บางมด อ.ทุ่งครุ กรุงเทพฯ",
@@ -34,6 +35,8 @@ export const mockShop = {
   promptPayId: "081-234-5678",
   accountName: "นางแดง ใจดี",
 };
+
+const baseShop = { ...mockShop };
 
 export const mockAccounts = [
   {
@@ -805,6 +808,21 @@ export const addStatusLog = (order, status, by) => {
   order.statusLogs.push({ status, at: new Date().toISOString(), by });
 };
 
+const onSwitchShop = (accountId) => {
+  const current = mockAccounts.find((a) => a.accountId === mockShop.accountId);
+  current.shop = { ...mockShop };
+  current.isOpen = mockShop.isOpen;
+  const account = mockAccounts.find((a) => a.accountId === accountId);
+  const shop = account.shop || {
+    ...baseShop,
+    accountId: account.accountId,
+    shopName: account.accountName,
+    status: "approved",
+    isOpen: account.isOpen,
+  };
+  Object.assign(mockShop, shop);
+};
+
 export const fetchSaveShop = (payload) => {
   if (payload.actionType === "open") {
     mockShop.isOpen = payload.isOpen;
@@ -816,25 +834,38 @@ export const fetchSaveShop = (payload) => {
     );
     account.accountName = mockShop.shopName;
   }
-  if (payload.actionType === "add") {
+  if (payload.actionType === "request") {
+    const accountId = mockAccounts.length + 1;
     const account = {
-      accountId: mockAccounts.length + 1,
+      accountId: accountId,
       accountType: "shop",
       accountName: payload.shop.shopName,
+      status: "pending",
+      requestedAt: new Date().toISOString(),
       newOrderCount: 0,
       isOpen: false,
+      shop: {
+        ...mockShop,
+        ...payload.shop,
+        accountId: accountId,
+        description: "",
+        status: "pending",
+        isOpen: false,
+      },
     };
     mockAccounts.splice(mockAccounts.length - 1, 0, account);
-    mockShop.accountId = account.accountId;
-    mockShop.shopName = account.accountName;
-    mockShop.phone = payload.shop.phone;
-    mockShop.promptPayId = payload.shop.promptPayId;
-    mockShop.isOpen = false;
+    onSwitchShop(accountId);
+  }
+  if (payload.actionType === "approve") {
+    const account = mockAccounts.find((a) => a.accountId === payload.accountId);
+    account.status = "approved";
+    if (account.shop) account.shop.status = "approved";
+    if (mockShop.accountId === account.accountId) {
+      mockShop.status = "approved";
+    }
   }
   if (payload.actionType === "switch") {
-    const account = mockAccounts.find((a) => a.accountId === payload.accountId);
-    mockShop.accountId = account.accountId;
-    mockShop.shopName = account.accountName;
+    onSwitchShop(payload.accountId);
   }
   return { success: true };
 };

@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button, Empty } from "antd";
+import { Button, Empty, Input } from "antd";
 import { STATUS } from "@/components/StatusBadge";
+import useNotify from "@/hooks/useNotify";
 import CustomerLayout from "@/layouts/CustomerLayout";
 import {
   fetchSaveDelivery,
   getBatchByToken,
+  loadBatch,
   mockCustomers,
   mockOrders,
   mockShop,
-} from "@/mock/mockData";
+  USE_MOCK,
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { formatTime } from "@/utils/format";
 
 const Jobs = () => {
@@ -18,15 +23,28 @@ const Jobs = () => {
   const batch = getBatchByToken(token);
   const [tab, setTab] = useState("pending");
   const [orders, setOrders] = useState([]);
+  const [rider, setRider] = useState({ name: "", phone: "" });
+  const [isClaiming, setIsClaiming] = useState(false);
+  const notify = useNotify();
+  // โหมด API: คนส่งต้องกรอกชื่อและเบอร์เพื่อรับรอบส่งก่อน (claim) จึงยืนยันส่งได้
+  const needClaim = !USE_MOCK && batch && !batch.isClaimed;
 
   useEffect(() => {
-    if (!batch || batch.status === "cancelled") return;
-    fetchSaveDelivery({ actionType: "scan", token: token });
+    if (!batch || batch.status === "cancelled" || needClaim) return;
+    if (USE_MOCK) fetchSaveDelivery({ actionType: "scan", token: token });
     const list = mockOrders.filter((o) => batch.orderIds.includes(o.orderId));
     setOrders(list);
     const hasPending = list.some((o) => o.status !== "completed");
     if (!hasPending) setTab("done");
-  }, [token]);
+  }, [token, needClaim]);
+
+  const onClaim = async () => {
+    setIsClaiming(true);
+    const resp = await fetchSaveDelivery({ actionType: "claim", token, ...rider });
+    setIsClaiming(false);
+    if (resp.success) navigate(0);
+    else notify.error(resp.message);
+  };
 
   if (!batch || batch.status === "cancelled") {
     return (
@@ -38,6 +56,48 @@ const Jobs = () => {
               : "ไม่พบรอบส่งนี้ ตรวจสอบ QR กับร้านอีกครั้ง"
           }
         />
+      </CustomerLayout>
+    );
+  }
+
+  if (needClaim) {
+    const isTaken = Boolean(batch.scannedAt);
+    return (
+      <CustomerLayout className="justify-center gap-4 px-6">
+        <h1 className="font-head text-xl font-bold">
+          รอบส่ง {batch.batchCode} · {batch.orderIds.length} ออเดอร์
+        </h1>
+        {isTaken ? (
+          <Empty description="รอบส่งนี้มีคนส่งรับไปแล้ว ติดต่อร้านถ้าต้องการรับแทน" />
+        ) : (
+          <>
+            <span className="text-sm text-ink-2">
+              กรอกชื่อและเบอร์ของคนส่ง ร้านและลูกค้าจะเห็นข้อมูลนี้
+            </span>
+            <Input
+              size="large"
+              placeholder="ชื่อคนส่ง"
+              value={rider.name}
+              onChange={(e) => setRider({ ...rider, name: e.target.value })}
+            />
+            <Input
+              size="large"
+              placeholder="เบอร์โทร 10 หลัก"
+              inputMode="tel"
+              value={rider.phone}
+              onChange={(e) => setRider({ ...rider, phone: e.target.value })}
+            />
+            <Button
+              type="primary"
+              size="large"
+              loading={isClaiming}
+              disabled={!rider.name.trim() || rider.phone.replace(/\D/g, "").length < 9}
+              onClick={onClaim}
+            >
+              รับรอบส่งนี้
+            </Button>
+          </>
+        )}
       </CustomerLayout>
     );
   }
@@ -81,16 +141,20 @@ const Jobs = () => {
           </span>
         </div>
         <div className="flex flex-col gap-px">
-          <b className="text-[15px] font-semibold">{customer?.displayName}</b>
+          <b className="text-[15px] font-semibold">
+            {customer?.displayName || order.deliveryPhone}
+          </b>
           <span className="text-sm leading-[20.3px] text-ink-2">
             {order.deliveryAddress}
             {order.addressNote && ` · จุดสังเกต: ${order.addressNote}`}
           </span>
         </div>
         <div className="flex gap-2">
-          <span className="rounded-full bg-[#F3F2EF] px-2.5 py-1 text-[13px] text-ink-2">
-            {getItemCount(order)} รายการ
-          </span>
+          {order.items.length > 0 && (
+            <span className="rounded-full bg-[#F3F2EF] px-2.5 py-1 text-[13px] text-ink-2">
+              {getItemCount(order)} รายการ
+            </span>
+          )}
           <span className="rounded-full bg-[#F3F2EF] px-2.5 py-1 text-[13px] text-ink-2">
             จ่ายแล้ว
           </span>
@@ -154,4 +218,4 @@ const Jobs = () => {
   );
 };
 
-export default Jobs;
+export default withLoad(Jobs, ({ token }) => loadBatch(token));

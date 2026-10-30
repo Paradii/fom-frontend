@@ -1,6 +1,6 @@
 import { Button } from "antd";
 import { Card } from "@/components";
-import { mockCustomers, paidTotal } from "@/mock/mockData";
+import { mockCustomers, paidTotal } from "@/services/data";
 import { formatPrice } from "@/utils/format";
 
 const OrderDetailRefund = ({ order, onRefund }) => {

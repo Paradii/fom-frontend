@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Tag } from "antd";
 import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import { StatusBadge } from "@/components";
-import { itemText, mockCustomers, paidTotal } from "@/mock/mockData";
+import { itemText, mockCustomers, paidTotal } from "@/services/data";
 import { formatPrice, formatTime } from "@/utils/format";
 
 const REFUND_TEXT = {

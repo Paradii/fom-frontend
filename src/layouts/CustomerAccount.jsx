@@ -1,5 +1,5 @@
 import { CheckOutlined, PlusOutlined, RightOutlined } from "@ant-design/icons";
-import { mockAccounts, mockMe } from "@/mock/mockData";
+import { mockAccounts, mockMe } from "@/services/data";
 
 const SHOP_COLORS = [
   "bg-[#FFF6D6] text-brand-text",
@@ -10,6 +10,7 @@ const CustomerAccount = ({ isSwitch, onSelect, onAddShop }) => {
   const shops = mockAccounts.filter((a) => a.accountType === "shop");
 
   const getShopNote = (shop) => {
+    if (shop.status === "pending") return "รอผู้ดูแลระบบอนุมัติ";
     if (isSwitch) return "แตะเพื่อสลับไปหน้าร้านค้า";
     if (shop.newOrderCount > 0) return "คำสั่งซื้อใหม่";
     return shop.isOpen ? "เปิดรับคำสั่งซื้อ" : "ปิดรับคำสั่งซื้อ";
@@ -17,9 +18,9 @@ const CustomerAccount = ({ isSwitch, onSelect, onAddShop }) => {
 
   const cardClass = (isActive) => {
     if (isActive) {
-      return "border-2 border-brand bg-[#FFF6D6] px-[13px] py-[11px]";
+      return "cursor-pointer border-2 border-brand bg-[#FFF6D6] px-[13px] py-[11px]";
     }
-    return "border border-line bg-white px-[14px] py-3";
+    return "cursor-pointer border border-line bg-white px-[14px] py-3";
   };
 
   const renderCard = ({
@@ -37,7 +38,7 @@ const CustomerAccount = ({ isSwitch, onSelect, onAddShop }) => {
       <a
         key={key}
         onClick={() => !isActive && onSelect(key)}
-        className={`flex cursor-pointer items-center gap-3 rounded-[14px] border-solid ${cardClass(isActive)}`}
+        className={`flex items-center gap-3 rounded-[14px] border-solid ${cardClass(isActive)}`}
       >
         <span
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-head text-lg font-semibold ${color}`}
@@ -63,11 +64,8 @@ const CustomerAccount = ({ isSwitch, onSelect, onAddShop }) => {
             {badge}
           </span>
         )}
-        {isActive ? (
-          <CheckOutlined className="text-xl" />
-        ) : (
-          <RightOutlined className="text-base text-ink-2" />
-        )}
+        {isActive && <CheckOutlined className="text-xl" />}
+        {!isActive && <RightOutlined className="text-base text-ink-2" />}
       </a>
     );
   };

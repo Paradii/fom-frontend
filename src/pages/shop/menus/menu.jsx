@@ -7,13 +7,13 @@ import useNotify from "@/hooks/useNotify";
 import useDropdown from "@/hooks/useDropdown";
 import useSearch from "@/hooks/useSearch";
 import { criteria } from "@/utils/pagination";
-import { fetchSaveMenu, mockMenus } from "@/mock/mockData";
+import { fetchSaveMenu, loadMenus, mockMenus } from "@/services/data";
 import MenuSearch from "./menuSearch";
 import MenuList from "./menuList";
 
 const Menu = () => {
   const navigate = useNavigate();
-  const { success } = useNotify();
+  const { success, error } = useNotify();
   const [gridCriteria, setGridCriteria] = useState(criteria({ pageSize: 20 }));
   const [dataTable, setDataTable] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +30,14 @@ const Menu = () => {
   useEffect(() => {
     onSearchForm(gridCriteria.page);
   }, [gridCriteria.page, gridCriteria.pageSize]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    loadMenus().then((resp) => {
+      if (!resp.success) error(resp.message);
+      onSearchForm(1);
+    });
+  }, []);
 
   const onSearchForm = (page = 1) => {
     const formValue = getValues();
@@ -53,16 +61,18 @@ const Menu = () => {
 
   const { isEmpty } = useSearch(control, onSearchForm);
 
-  const onToggleAvailable = (record, checked) => {
+  const onToggleAvailable = async (record, checked) => {
     const payload = {
       actionType: "available",
       menuId: record.menuId,
       isAvailable: checked,
     };
-    const resp = fetchSaveMenu(payload);
+    const resp = await fetchSaveMenu(payload);
     if (resp.success) {
       success(checked ? "เปิดขายแล้ว" : "ตั้งเป็นหมดแล้ว");
       onSearchForm(gridCriteria.page);
+    } else {
+      error(resp.message);
     }
   };
 

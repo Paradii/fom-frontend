@@ -1,5 +1,5 @@
 import { Card } from "@/components";
-import { itemTotal, optionText, paidTotal } from "@/mock/mockData";
+import { itemTotal, optionText, paidTotal } from "@/services/data";
 import { formatPrice } from "@/utils/format";
 
 const OrderDetailItems = ({ order }) => {

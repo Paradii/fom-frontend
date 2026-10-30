@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { LoadingOutlined } from "@ant-design/icons";
 import { FormUpload, UseModal } from "@/components";
-import { mockCustomers, paidTotal } from "@/mock/mockData";
+import { mockCustomers, paidTotal } from "@/services/data";
 import { formatPrice } from "@/utils/format";
 
 const schema = yup.object({

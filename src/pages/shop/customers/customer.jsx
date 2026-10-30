@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import PagePattern from "@/layouts/PagePattern";
 import useSearch from "@/hooks/useSearch";
+import useDataChange from "@/hooks/useDataChange";
 import { criteria } from "@/utils/pagination";
 import {
   isRegularCustomer,
   mockCustomers,
   mockOrders,
   paidTotal,
-} from "@/mock/mockData";
+} from "@/services/data";
 import CustomerSearch from "./customerSearch";
 import CustomerSummary from "./customerSummary";
 import CustomerList from "./customerList";
@@ -38,6 +39,9 @@ const Customer = () => {
   useEffect(() => {
     onSearchForm(gridCriteria.page);
   }, [gridCriteria.page, gridCriteria.pageSize]);
+
+  // ยังไม่มี API ลูกค้าประจำ คำนวณจากคำสั่งซื้อที่ ShopLayout โหลดไว้
+  useDataChange(() => onSearchForm(gridCriteria.page));
 
   const getFavoriteMenus = (orders) => {
     const menuCount = {};

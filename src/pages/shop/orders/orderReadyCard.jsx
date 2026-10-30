@@ -1,6 +1,6 @@
 import { Button } from "antd";
 import { CheckOutlined, QrcodeOutlined } from "@ant-design/icons";
-import { itemText, mockCustomers, paidTotal } from "@/mock/mockData";
+import { itemText, mockCustomers, paidTotal } from "@/services/data";
 import { formatPrice, formatTime } from "@/utils/format";
 
 const OrderReadyCard = ({ order, isSelected, onSelect, onQr }) => {

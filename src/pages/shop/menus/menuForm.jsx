@@ -24,10 +24,11 @@ import {
 import {
   fetchSaveMenu,
   fetchSaveTagRequest,
+  loadMenus,
   mockMenus,
   mockTagRequests,
   mockTags,
-} from "@/mock/mockData";
+} from "@/services/data";
 import { formatPrice, onlyDigits } from "@/utils/format";
 import ModalAddOption from "./modalAddOption";
 import ModalRequestTag, { TYPE_OPTIONS } from "./modalRequestTag";
@@ -169,30 +170,39 @@ const MenuForm = () => {
   });
 
   const formValue = watch();
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (actionCode === "U") {
-      const menu = mockMenus.find((m) => m.menuId === Number(menuId));
-      if (!menu) {
-        error("ไม่พบเมนูนี้ อาจถูกลบไปแล้ว");
-        backToList();
-        return;
-      }
-      reset({
-        menuName: menu.menuName,
-        price: menu.price,
-        categoryId: menu.categoryId,
-        description: menu.description,
-        tasteIds: filterTag(menu.tagIds, "taste"),
-        ingredientIds: filterTag(menu.tagIds, "ingredient"),
-        cookingIds: filterTag(menu.tagIds, "cooking_method"),
-        image: menu.imageUrl ? { url: menu.imageUrl } : null,
-        isAvailable: menu.isAvailable,
-      });
-      setOptionGroups(menu.optionGroups);
-      setTagRequests(mockTagRequests.filter((r) => r.menuId === menu.menuId));
-    }
+    if (actionCode === "U") onLoadMenu();
+    // เพิ่มเมนูใหม่ต้องมีหมวดหมู่และแท็กของร้านในดรอปดาวน์
+    else if (mockMenus.length === 0) loadMenus();
   }, [menuId]);
+
+  const onLoadMenu = async () => {
+    // เปิดหน้านี้ตรงจากลิงก์ ยังไม่มีเมนูใน store ให้โหลดก่อน
+    if (!mockMenus.some((m) => m.menuId === Number(menuId))) {
+      await loadMenus();
+    }
+    const menu = mockMenus.find((m) => m.menuId === Number(menuId));
+    if (!menu) {
+      error("ไม่พบเมนูนี้ อาจถูกลบไปแล้ว");
+      backToList();
+      return;
+    }
+    reset({
+      menuName: menu.menuName,
+      price: menu.price,
+      categoryId: menu.categoryId,
+      description: menu.description,
+      tasteIds: filterTag(menu.tagIds, "taste"),
+      ingredientIds: filterTag(menu.tagIds, "ingredient"),
+      cookingIds: filterTag(menu.tagIds, "cooking_method"),
+      image: menu.imageUrl ? { url: menu.imageUrl } : null,
+      isAvailable: menu.isAvailable,
+    });
+    setOptionGroups(menu.optionGroups);
+    setTagRequests(mockTagRequests.filter((r) => r.menuId === menu.menuId));
+  };
 
   const filterTag = (tagIds, tagType) => {
     return tagIds.filter((id) => {
@@ -205,7 +215,7 @@ const MenuForm = () => {
     navigate("/shop/menus");
   };
 
-  const onSubmitForm = (formValue) => {
+  const onSubmitForm = async (formValue) => {
     const payload = {
       menuName: formValue.menuName,
       price: formValue.price,
@@ -220,15 +230,19 @@ const MenuForm = () => {
       imageUrl: formValue.image?.url || "",
       isAvailable: formValue.isAvailable,
     };
-    const resp = fetchSaveMenu({
+    setIsSaving(true);
+    const resp = await fetchSaveMenu({
       actionType: actionCode,
       menuId: Number(menuId),
       menu: payload,
       tagRequests: actionCode === "A" ? tagRequests : [],
     });
+    setIsSaving(false);
     if (resp.success) {
       success("บันทึกเมนูเรียบร้อย");
       backToList();
+    } else {
+      error(resp.message);
     }
   };
 
@@ -238,15 +252,15 @@ const MenuForm = () => {
       content: "ลบแล้วลูกค้าจะไม่เห็นเมนูนี้อีก",
       okText: "ลบเมนู",
       danger: true,
-      onOk: () => {
-        const resp = fetchSaveMenu({
+      onOk: async () => {
+        const resp = await fetchSaveMenu({
           actionType: "D",
           menuId: Number(menuId),
         });
         if (resp.success) {
           success("ลบเมนูเรียบร้อย");
         } else {
-          error("ไม่พบเมนูนี้ อาจถูกลบไปแล้ว");
+          error(resp.message || "ไม่พบเมนูนี้ อาจถูกลบไปแล้ว");
         }
         backToList();
       },
@@ -265,17 +279,19 @@ const MenuForm = () => {
     setOptionGroups(optionGroups.filter((g, i) => i !== index));
   };
 
-  const onSaveTagRequest = (formValue) => {
+  const onSaveTagRequest = async (formValue) => {
     if (actionCode === "A") {
       setTagRequests([...tagRequests, formValue]);
       success("เพิ่มคำขอแท็กแล้ว จะส่งให้ผู้ดูแลระบบตอนบันทึกเมนู");
       return;
     }
     const request = { ...formValue, menuId: Number(menuId) };
-    const resp = fetchSaveTagRequest(request);
+    const resp = await fetchSaveTagRequest(request);
     if (resp.success) {
       setTagRequests([...tagRequests, request]);
       success("ส่งคำขอแท็กใหม่แล้ว รอผู้ดูแลระบบตรวจ");
+    } else {
+      error(resp.message);
     }
   };
 
@@ -480,6 +496,7 @@ const MenuForm = () => {
             <ButtonSave
               text="บันทึกเมนู"
               className="h-12 flex-[2]"
+              loading={isSaving}
               onClick={handleSubmit(onSubmitForm)}
             />
           </div>

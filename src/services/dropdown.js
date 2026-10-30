@@ -1,4 +1,4 @@
-import { mockCategories, mockTags } from "@/mock/mockData";
+import { mockCategories, mockTags } from "@/services/data";
 
 export const DROPDOWNS = {
   menuCategory: {

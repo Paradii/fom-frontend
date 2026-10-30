@@ -5,7 +5,7 @@ import {
   HomeOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { getActiveOrder, getMyOrders } from "@/mock/mockData";
+import { getActiveOrder, getMyOrders } from "@/services/data";
 
 const CustomerLayout = ({ nav, footer, className = "", children }) => {
   const navigate = useNavigate();

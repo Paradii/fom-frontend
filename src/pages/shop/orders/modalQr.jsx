@@ -1,6 +1,6 @@
 import { Button, QRCode } from "antd";
 import { UseModal } from "@/components";
-import { mockCustomers, mockOrders, paidTotal } from "@/mock/mockData";
+import { mockCustomers, mockOrders, paidTotal } from "@/services/data";
 import { formatPrice } from "@/utils/format";
 
 const ModalQr = ({ modal, setModal, onCancelBatch }) => {
@@ -61,7 +61,15 @@ const ModalQr = ({ modal, setModal, onCancelBatch }) => {
               {orders.length} ออเดอร์ · {formatPrice(total)}
             </div>
           </div>
-          <QRCode value={link} size={206} bordered />
+          {batch.token ? (
+            <QRCode value={link} size={206} bordered />
+          ) : (
+            <div className="rounded-xl bg-bg p-4 text-center text-sm text-ink-2">
+              QR ของรอบนี้สร้างจากเครื่องอื่น ระบบแสดงซ้ำไม่ได้
+              <br />
+              ถ้าคนส่งยังไม่ได้สแกน ให้ผู้ดูแลระบบยกเลิกรอบแล้วสร้างใหม่
+            </div>
+          )}
           <div className="text-center">
             <div>
               ให้คนส่งสแกนด้วยกล้องมือถือ เปิดลิงก์ได้เลย{" "}

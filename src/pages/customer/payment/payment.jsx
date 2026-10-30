@@ -13,8 +13,11 @@ import {
   getOrder,
   getPaySecondsLeft,
   getShop,
+  loadMyOrder,
   paidTotal,
-} from "@/mock/mockData";
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { formatCountdown, maskPromptPay } from "@/utils/format";
 import PayHeader from "./payHeader";
 
@@ -31,6 +34,7 @@ const Payment = () => {
   const order = getOrder(Number(orderId));
   const [slipUrl, setSlipUrl] = useState("");
   const [slipName, setSlipName] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const [seconds, setSeconds] = useState(order ? getPaySecondsLeft(order) : 0);
 
   useEffect(() => {
@@ -51,13 +55,14 @@ const Payment = () => {
 
   useEffect(() => {
     if (!order || order.status !== "pending_payment" || seconds > 0) return;
-    const resp = fetchSaveMyOrder({
+    fetchSaveMyOrder({
       actionType: "cancel",
       orderId: order.orderId,
       reason: "ไม่ได้แนบสลิปภายใน 15 นาที",
       by: "ระบบ",
+    }).then((resp) => {
+      if (resp.success) navigate(`/c/cancelled/${order.orderId}`);
     });
-    if (resp.success) navigate(`/c/cancelled/${order.orderId}`);
   }, [seconds]);
 
   if (!order) {
@@ -92,13 +97,16 @@ const Payment = () => {
     notify.success("บันทึก QR ลงเครื่องแล้ว");
   };
 
-  const onSend = () => {
-    const resp = fetchSaveMyOrder({
+  const onSend = async () => {
+    setIsSending(true);
+    const resp = await fetchSaveMyOrder({
       actionType: "slip",
       orderId: order.orderId,
       slipUrl: slipUrl,
     });
+    setIsSending(false);
     if (resp.success) navigate(`/c/verifying/${order.orderId}`);
+    else notify.error(resp.message);
   };
 
   const onCancel = () => {
@@ -107,13 +115,14 @@ const Payment = () => {
       content: "ยังไม่ได้ชำระเงิน ยกเลิกได้ทันที",
       okText: "ยกเลิกคำสั่งซื้อ",
       danger: true,
-      onOk: () => {
-        const resp = fetchSaveMyOrder({
+      onOk: async () => {
+        const resp = await fetchSaveMyOrder({
           actionType: "cancel",
           orderId: order.orderId,
           reason: "ลูกค้ายกเลิกก่อนชำระเงิน",
         });
         if (resp.success) navigate(`/c/shop/${order.shopId}`);
+        else notify.error(resp.message);
       },
     });
   };
@@ -125,6 +134,7 @@ const Payment = () => {
         block
         className="c-main"
         disabled={!slipUrl}
+        loading={isSending}
         onClick={onSend}
       >
         ส่งสลิปให้ตรวจ
@@ -160,7 +170,7 @@ const Payment = () => {
             className="mt-3.5 rounded-xl border border-solid border-line bg-white p-1"
           >
             <QRCode
-              value={`promptpay:${promptPayId}:${total}`}
+              value={order.qrPayload || `promptpay:${promptPayId}:${total}`}
               size={158}
               bordered={false}
               type="canvas"
@@ -219,4 +229,4 @@ const Payment = () => {
   );
 };
 
-export default Payment;
+export default withLoad(Payment, ({ orderId }) => loadMyOrder(Number(orderId)));

@@ -6,6 +6,7 @@ import {
   AppstoreOutlined,
   BarChartOutlined,
   BellOutlined,
+  ClockCircleOutlined,
   DownOutlined,
   FileTextOutlined,
   MenuFoldOutlined,
@@ -16,7 +17,13 @@ import {
 } from "@ant-design/icons";
 import Logo from "@/components/Logo";
 import useNotify from "@/hooks/useNotify";
-import { fetchSaveShop, mockOrders, mockShop } from "@/mock/mockData";
+import {
+  fetchSaveShop,
+  loadShopOrders,
+  logout,
+  mockOrders,
+  mockShop,
+} from "@/services/data";
 import ShopAccount from "./ShopAccount";
 
 const MENU_LIST = [
@@ -56,39 +63,65 @@ const ShopLayout = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(mockShop.isOpen);
   const [shopName, setShopName] = useState(mockShop.shopName);
+  const [isPending, setIsPending] = useState(mockShop.status === "pending");
   const [accountPlace, setAccountPlace] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [newOrderCount, setNewOrderCount] = useState(0);
   useEffect(() => {
+    if (!mockShop.shopId) {
+      navigate("/shop/new");
+      return;
+    }
     onRefreshCount();
+    loadShopOrders();
     const timer = setInterval(onRefreshCount, 1000);
-    return () => clearInterval(timer);
+    // ดึงคำสั่งซื้อใหม่จาก backend ทุก 15 วินาที (ยังไม่มี WebSocket)
+    const syncTimer = setInterval(loadShopOrders, 15000);
+    return () => {
+      clearInterval(timer);
+      clearInterval(syncTimer);
+    };
   }, []);
 
   const onRefreshCount = () => {
     const result = mockOrders.filter((o) => o.status === "paid");
     setNewOrderCount(result.length);
     setShopName(mockShop.shopName);
+    setIsOpen(mockShop.isOpen);
+    setIsPending(mockShop.status === "pending");
   };
 
-  const { success, confirm } = useNotify();
-  const openText = isOpen ? "เปิดรับคำสั่งซื้อ" : "ปิดรับคำสั่งซื้อ";
-  const openClass = isOpen ? "text-[#0E6E5C]" : "text-ink-3";
+  const { success, error, confirm } = useNotify();
+  const getOpenText = () => {
+    if (isPending) return "รออนุมัติ";
+    return isOpen ? "เปิดรับคำสั่งซื้อ" : "ปิดรับคำสั่งซื้อ";
+  };
 
-  const onSubmitForm = (formValue) => {
-    const resp = fetchSaveShop({
+  const getOpenClass = () => {
+    if (isPending) return "text-[#8A5A00]";
+    return isOpen ? "text-[#0E6E5C]" : "text-ink-3";
+  };
+
+  const openText = getOpenText();
+  const openClass = getOpenClass();
+
+  const onSubmitForm = async (formValue) => {
+    const resp = await fetchSaveShop({
       actionType: "open",
       isOpen: formValue.isOpen,
     });
     if (resp.success) {
       setIsOpen(formValue.isOpen);
+    } else {
+      error(resp.message);
     }
+    return resp;
   };
 
-  const onToggleOpen = (checked) => {
+  const onToggleOpen = async (checked) => {
     if (checked) {
-      onSubmitForm({ isOpen: true });
-      success("เปิดรับคำสั่งซื้อแล้ว");
+      const resp = await onSubmitForm({ isOpen: true });
+      if (resp.success) success("เปิดรับคำสั่งซื้อแล้ว");
       return;
     }
     confirm({
@@ -96,26 +129,29 @@ const ShopLayout = () => {
       content: "ลูกค้าจะสั่งอาหารจากร้านไม่ได้ จนกว่าร้านจะเปิดอีกครั้ง",
       okText: "ปิดรับ",
       danger: true,
-      onOk: () => {
-        onSubmitForm({ isOpen: false });
-        success("ปิดรับคำสั่งซื้อแล้ว");
+      onOk: async () => {
+        const resp = await onSubmitForm({ isOpen: false });
+        if (resp.success) success("ปิดรับคำสั่งซื้อแล้ว");
       },
     });
   };
 
-  const onSwitch = (account) => {
+  const onSwitch = async (account) => {
     setAccountPlace(null);
     if (account.accountId === mockShop.accountId) return;
     if (account.accountType === "customer") {
       navigate("/c/nearby");
       return;
     }
-    const resp = fetchSaveShop({
+    const resp = await fetchSaveShop({
       actionType: "switch",
       accountId: account.accountId,
     });
     if (resp.success) {
+      loadShopOrders();
       setShopName(mockShop.shopName);
+      setIsOpen(mockShop.isOpen);
+      setIsPending(mockShop.status === "pending");
       success(`สลับไปที่ ${account.accountName} แล้ว`);
     }
   };
@@ -127,7 +163,10 @@ const ShopLayout = () => {
       content: "ต้องเข้าสู่ระบบด้วย LINE อีกครั้งเพื่อใช้งานร้าน",
       okText: "ออกจากระบบ",
       danger: true,
-      onOk: () => navigate("/login"),
+      onOk: async () => {
+        await logout();
+        navigate("/login");
+      },
     });
   };
 
@@ -197,7 +236,11 @@ const ShopLayout = () => {
                   <span className="h-2 w-2 rounded-full bg-current" />
                   {openText}
                 </span>
-                <Switch checked={isOpen} onChange={onToggleOpen} />
+                <Switch
+                  checked={isOpen}
+                  disabled={isPending}
+                  onChange={onToggleOpen}
+                />
               </div>
             </div>
           )}
@@ -277,7 +320,7 @@ const ShopLayout = () => {
             {openText}
           </span>
         </button>
-        <Switch checked={isOpen} onChange={onToggleOpen} />
+        <Switch checked={isOpen} disabled={isPending} onChange={onToggleOpen} />
       </header>
 
       <UseModal
@@ -298,6 +341,18 @@ const ShopLayout = () => {
 
       <main className="box-border min-w-0 flex-1 p-8 pb-[116px] lg:pb-8">
         <div className={isCollapsed ? "max-w-[1400px]" : "max-w-[1136px]"}>
+          {isPending && (
+            <div className="mb-5 flex gap-3 rounded-[14px] border border-solid border-[#F5D58A] bg-[#FFF6D6] p-4 text-base text-[#5C3D00]">
+              <ClockCircleOutlined className="mt-1 text-xl" />
+              <div className="flex flex-col gap-1">
+                <b>ร้านนี้รอผู้ดูแลระบบอนุมัติ</b>
+                <span>
+                  ระหว่างนี้เพิ่มเมนูและตั้งค่าร้านได้
+                  เปิดรับคำสั่งซื้อได้เมื่ออนุมัติแล้ว
+                </span>
+              </div>
+            </div>
+          )}
           <Outlet />
         </div>
       </main>

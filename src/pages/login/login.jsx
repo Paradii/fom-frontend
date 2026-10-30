@@ -1,11 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Checkbox } from "antd";
 import { RightOutlined, ShopOutlined } from "@ant-design/icons";
 import { FoodIcon } from "@/components";
 import LoginLayout from "@/layouts/LoginLayout";
 import ShopAccount from "@/layouts/ShopAccount";
-import { fetchSaveShop, mockAccounts, mockMe } from "@/mock/mockData";
+import useNotify from "@/hooks/useNotify";
+import {
+  fetchSaveMe,
+  fetchSaveShop,
+  isLoggedIn,
+  loginWithLine,
+  mockAccounts,
+  mockMe,
+  USE_MOCK,
+} from "@/services/data";
+
+const HAS_LIFF = Boolean(import.meta.env.VITE_LIFF_ID);
 import ModalPolicy from "@/pages/customer/modalPolicy";
 
 const ROLES = [
@@ -35,7 +46,14 @@ const Login = () => {
   const [isAccept, setIsAccept] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isPolicyOpen, setIsPolicyOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const notify = useNotify();
   const isDesktop = window.innerWidth >= 1024;
+
+  // กลับมาจากหน้าเข้าสู่ระบบของ LINE แล้ว (App แลก token ไว้ให้แล้ว) ไปขั้นถัดไปได้เลย
+  useEffect(() => {
+    if (HAS_LIFF && !USE_MOCK && isLoggedIn()) onAfterLogin();
+  }, []);
 
   const goCustomer = () => {
     if (mockMe.consentAt) {
@@ -45,9 +63,13 @@ const Login = () => {
     navigate("/c/location");
   };
 
-  const goShop = (accountId) => {
-    const resp = fetchSaveShop({ actionType: "switch", accountId: accountId });
+  const goShop = async (accountId) => {
+    const resp = await fetchSaveShop({
+      actionType: "switch",
+      accountId: accountId,
+    });
     if (resp.success) navigate("/shop/orders");
+    else notify.error(resp.message);
   };
 
   const onAccept = (checked) => {
@@ -55,13 +77,32 @@ const Login = () => {
     setIsError(false);
   };
 
-  const onLogin = () => {
-    if (!isAccept) {
+  const onLogin = async (isAccepted = isAccept) => {
+    if (!isAccepted) {
       setIsError(true);
       return;
     }
+    if (!isLoggedIn()) {
+      setIsLoading(true);
+      const resp = await loginWithLine();
+      setIsLoading(false);
+      if (resp.isRedirect) return;
+      if (!resp.success) {
+        notify.error(resp.message);
+        return;
+      }
+    }
+    onAfterLogin();
+  };
+
+  const onAfterLogin = async () => {
+    const isNew = mockMe.isNew;
+    // ผู้ใช้ใหม่ติ๊กยอมรับนโยบายแล้ว บันทึกความยินยอม PDPA ไว้ที่ backend
+    if (isNew && !USE_MOCK) {
+      await fetchSaveMe({ actionType: "consent", isLocationOn: mockMe.isLocationOn });
+    }
     const shops = mockAccounts.filter((a) => a.accountType === "shop");
-    if (mockMe.isNew) {
+    if (isNew) {
       setStep("role");
       return;
     }
@@ -150,7 +191,8 @@ const Login = () => {
         <Button
           size="large"
           className="line-button h-[52px] text-lg"
-          onClick={onLogin}
+          loading={isLoading}
+          onClick={() => onLogin()}
         >
           <span className="grid h-7 w-7 place-items-center rounded-lg bg-white text-[11px] font-bold text-[#06C755]">
             LINE

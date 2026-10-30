@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { DatePicker, Segmented } from "antd";
 import PagePattern from "@/layouts/PagePattern";
-import { mockOrders, paidTotal } from "@/mock/mockData";
+import { mockOrders, paidTotal } from "@/services/data";
+import useDataChange from "@/hooks/useDataChange";
 import ReportSummary from "./reportSummary";
 import ReportChart from "./reportChart";
 import ReportTopMenu from "./reportTopMenu";
@@ -109,6 +110,9 @@ const Report = () => {
   useEffect(() => {
     onSearchForm();
   }, [range]);
+
+  // ยังไม่มี API สรุปยอดขาย คำนวณจากคำสั่งซื้อล่าสุด 100 รายการที่ ShopLayout โหลดไว้
+  useDataChange(() => onSearchForm());
 
   const onChangePeriod = (value) => {
     setPeriod(value);

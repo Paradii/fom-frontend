@@ -4,7 +4,7 @@ import {
   PlusOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import { mockAccounts, mockShop } from "@/mock/mockData";
+import { mockAccounts, mockShop } from "@/services/data";
 
 const TYPE_TEXT = {
   shop: "ร้านค้า",
@@ -28,6 +28,7 @@ const ShopAccount = ({
       return "ใช้ได้เฉพาะบนโทรศัพท์ (เปิดใน LINE)";
     }
     if (account.accountType === "customer") return "เปิดในแอป LINE";
+    if (account.status === "pending") return "รอผู้ดูแลระบบอนุมัติ";
     if (account.newOrderCount > 0 && account.accountId !== accountId) {
       return "คำสั่งซื้อใหม่";
     }

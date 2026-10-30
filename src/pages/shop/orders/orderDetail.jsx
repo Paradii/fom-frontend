@@ -3,8 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "antd";
 import PagePattern from "@/layouts/PagePattern";
 import useNotify from "@/hooks/useNotify";
+import useDataChange from "@/hooks/useDataChange";
 import { StatusBadge } from "@/components";
-import { fetchSaveOrder, mockOrders } from "@/mock/mockData";
+import { fetchSaveOrder, loadShopOrders, mockOrders } from "@/services/data";
 import { formatTime } from "@/utils/format";
 import OrderDetailItems from "./orderDetailItems";
 import OrderDetailCustomer from "./orderDetailCustomer";
@@ -31,10 +32,15 @@ const NEXT_STEP = {
 
 const CANCEL_STATUS = ["paid", "preparing", "ready"];
 
+const findOrderIn = (orderId) => {
+  return mockOrders.find((o) => o.orderId === Number(orderId));
+};
+
 const OrderDetail = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const { success } = useNotify();
+  const { success, error } = useNotify();
+  const [isLoading, setIsLoading] = useState(!findOrderIn(orderId));
   const [order, setOrder] = useState(null);
   const [modal, setModal] = useState({
     open: false,
@@ -47,18 +53,19 @@ const OrderDetail = () => {
 
   useEffect(() => {
     onSearchForm();
+    if (!findOrder()) loadShopOrders().finally(() => setIsLoading(false));
   }, [orderId]);
 
-  const findOrder = () => {
-    return mockOrders.find((o) => o.orderId === Number(orderId));
-  };
+  useDataChange(() => onSearchForm());
+
+  const findOrder = () => findOrderIn(orderId);
 
   const onSearchForm = () => {
     const result = findOrder();
     setOrder(result ? { ...result } : null);
   };
 
-  const onSubmitForm = ({ formValue, actionType }) => {
+  const onSubmitForm = async ({ formValue, actionType }) => {
     const payload = {
       actionType: actionType,
       orderId: order.orderId,
@@ -68,35 +75,40 @@ const OrderDetail = () => {
       slipUrl: formValue.slipUrl,
       by: "ร้าน",
     };
-    const resp = fetchSaveOrder(payload);
+    const resp = await fetchSaveOrder(payload);
     if (resp.success) {
       onSearchForm();
+    } else {
+      error(resp.message);
     }
+    return resp;
   };
 
-  const onNextStep = (next) => {
-    onSubmitForm({
+  const onNextStep = async (next) => {
+    const resp = await onSubmitForm({
       formValue: { status: next.status },
       actionType: next.actionType,
     });
-    success(next.message);
+    if (resp.success) success(next.message);
   };
 
-  const onSaveReject = (data, reason, isRefund) => {
-    onSubmitForm({
+  const onSaveReject = async (data, reason, isRefund) => {
+    const resp = await onSubmitForm({
       formValue: { reason: reason, isRefund: isRefund },
       actionType: "cancel",
     });
-    success(`ยกเลิกแล้ว แจ้งลูกค้าว่า "${reason}"`);
+    if (resp.success) success(`ยกเลิกแล้ว แจ้งลูกค้าว่า "${reason}"`);
   };
 
-  const onSaveRefund = (data, slip) => {
-    onSubmitForm({
+  const onSaveRefund = async (data, slip) => {
+    const resp = await onSubmitForm({
       formValue: { slipUrl: slip.url },
       actionType: "refund",
     });
-    success("บันทึกการโอนคืนแล้ว แจ้งลูกค้าทาง LINE แล้ว");
+    if (resp.success) success("บันทึกการโอนคืนแล้ว แจ้งลูกค้าทาง LINE แล้ว");
   };
+
+  if (!order && isLoading) return <PagePattern title="กำลังโหลด..." />;
 
   if (!order) {
     return (

@@ -1,5 +1,5 @@
 import { Card, StatusBadge } from "@/components";
-import { getBatch } from "@/mock/mockData";
+import { getBatch } from "@/services/data";
 import { formatTime } from "@/utils/format";
 
 const STEP_TEXT = {

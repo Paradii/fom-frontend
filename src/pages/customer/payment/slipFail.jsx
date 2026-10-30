@@ -8,7 +8,14 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import CustomerLayout from "@/layouts/CustomerLayout";
-import { getOrder, getPaySecondsLeft, paidTotal } from "@/mock/mockData";
+import {
+  getOrder,
+  getPaySecondsLeft,
+  loadMyOrder,
+  paidTotal,
+} from "@/services/data";
+import withLoad from "@/utils/withLoad";
+
 import { formatCountdown } from "@/utils/format";
 import PayHeader from "./payHeader";
 
@@ -127,4 +134,4 @@ const SlipFail = () => {
   );
 };
 
-export default SlipFail;
+export default withLoad(SlipFail, ({ orderId }) => loadMyOrder(Number(orderId)));

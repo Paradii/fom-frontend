@@ -8,7 +8,13 @@ import {
 } from "react-router-dom";
 import { Spin } from "antd";
 import ShopLayout from "@/layouts/ShopLayout";
-import { initLine, isLoggedIn, loadSession } from "@/services/data";
+import {
+  initLine,
+  isLoggedIn,
+  isMockPath,
+  loadSession,
+  USE_MOCK,
+} from "@/services/data";
 import { routes } from "./routes";
 
 // หน้าที่เปิดได้โดยไม่ต้องเข้าสู่ระบบ: หน้าเข้าสู่ระบบ และลิงก์ของคนส่งจาก QR
@@ -16,6 +22,10 @@ const isPublic = (path) => path === "/login" || path.startsWith("/rider/");
 
 const RequireLogin = ({ path, children }) => {
   const location = useLocation();
+  if (isMockPath(location.pathname) !== USE_MOCK) {
+    window.location.reload();
+    return null;
+  }
   if (isPublic(path) || isLoggedIn()) return children;
   return <Navigate to="/login" replace state={{ from: location.pathname }} />;
 };

@@ -49,7 +49,15 @@ import {
 
 export * from "@/mock/mockData";
 
-export const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
+const SHOP_ONLY_API = import.meta.env.VITE_SHOP_ONLY_API === "true";
+
+export const isMockPath = (path) => {
+  if (import.meta.env.VITE_USE_MOCK === "true") return true;
+  if (!SHOP_ONLY_API) return false;
+  return !path.startsWith("/shop") && !path.startsWith("/login");
+};
+
+export const USE_MOCK = isMockPath(window.location.pathname);
 
 const SHOP_KEY = "fom_shop_id";
 const ADDRESS_KEY = "fom_address_id";
